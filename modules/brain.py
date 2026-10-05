@@ -8,6 +8,7 @@ Script engine (Gemini) - English edition.
 - Topic history stores the last facts and titles; Gemini is told to avoid them.
 - Story structure with a real hook, a payoff, and a loop-back ending.
 - Symbols / % / $ / stray characters are cleaned so TTS never stumbles.
+- Optimized for US/UK audience retention (psychology/brain facts, strong hooks).
 """
 
 import json
@@ -44,7 +45,8 @@ HISTORY_LIMIT = 90
 
 # Every category maps to footage that really exists on Pexels/Pixabay.
 CATEGORIES = [
-    "human body and brain (eyes, heart, hands, sleep)",
+    "human body and brain (eyes, heart, hands, sleep, tickle reflex)",
+    "psychology and everyday human habits",
     "space, planets, stars and astronauts",
     "deep ocean and sea animals",
     "wild animals and their survival tricks",
@@ -54,7 +56,6 @@ CATEGORIES = [
     "money, gold and strange facts about wealth",
     "food and cooking science",
     "technology, robots, computers and smartphones",
-    "psychology and everyday human habits",
     "time, clocks and calendars",
     "deserts, mountains and extreme places on Earth",
     "insects and tiny creatures",
@@ -277,9 +278,9 @@ _SCHEMA = """{
 def _writer_prompt(plan):
     avoid = "\n".join(f"- {a}" for a in plan["avoid"]) or "- (nothing yet)"
     return f"""
-You are the head writer of a top English-language YouTube Shorts facts channel.
-Write ONE fresh 28-34 second Short. Retention is everything: most viewers decide
-to swipe in the first 2-3 seconds.
+You are the head writer of a top English-language YouTube Shorts facts channel
+that targets US/UK audiences (Gen Z + young millennials). Your videos average
+2M+ views because you know EXACTLY how to stop the scroll in the first 2 seconds.
 
 CATEGORY: {plan['category']}
 FORMAT: {plan['format']} -> {FORMATS[plan['format']]}
@@ -291,52 +292,80 @@ Also avoid the internet's most overused facts (honey never spoils, octopus has t
 we use only 10% of the brain, banana radiation, Great Wall visible from space, etc).
 Pick something a curious person would say "wait, really?" to.
 
-HOOK (scene 1) - THE MOST IMPORTANT LINE
-- Max 8 words. The first 3 words must already create shock, danger, or an open question.
-- No greeting, no intro, never start with 'Did you know'. Start mid-action, like the
-  story is already happening.
-- Use ONE of these patterns (styles only, do NOT copy the examples):
-  1. Bold true claim that sounds wrong: 'Your brain lies to you every day.'
-  2. Warning to the viewer: 'Never do this before you sleep.'
-  3. Impossible thing: 'This animal comes back to life.'
-  4. Direct 'you' question: 'You do this daily, but why?'
-  5. Countdown/stakes: 'Just three seconds, and everything changes.'
-- The hook must promise something the LAST scenes actually deliver. No clickbait lies.
+============================================================
+HOOK (scene 1) - THIS IS 90% OF THE VIDEO'S SUCCESS
+============================================================
+- Max 8 words. The FIRST 3 WORDS must create shock, danger, or an open question.
+- NEVER start with 'Did you know', 'Have you ever', or any greeting. Start mid-action.
+- The hook must feel like the viewer is ALREADY in the middle of a story.
+- Use ONE of these 5 proven patterns (styles only, do NOT copy examples):
+
+  1. BOLD TRUE CLAIM that sounds wrong:
+     'Your brain lies to you every day.'
+  2. WARNING to the viewer (direct 'you'):
+     'Never do this before you sleep.'
+  3. IMPOSSIBLE THING that grabs attention:
+     'This animal comes back to life.'
+  4. DIRECT QUESTION that hurts curiosity:
+     'Why can't you tickle yourself?'
+  5. STAKES / COUNTDOWN:
+     'Just three seconds, and everything changes.'
+
+- For PSYCHOLOGY / BRAIN facts specifically: start with the weirdest symptom or
+  result first, then ask 'why'. Example pattern:
+  'You can't tickle yourself - here's why.' / 'Your brain ignores your own touch.'
+- The hook must be TRUTHFULLY paid off in the last scenes. No clickbait lies.
 - Scene 1 caption = the 2-3 most shocking words, UPPERCASE-friendly.
 
+============================================================
 ACCURACY (non-negotiable)
-- Only real, well-established facts. If you are not sure, choose a different fact.
-- No invented statistics. No "X will kill you" style medical fear-mongering.
-- Use round, defensible numbers ("about", "roughly", "nearly" are fine).
+============================================================
+- Only real, well-established facts. If unsure, choose a different fact.
+- No invented statistics. No 'X will kill you' style medical fear-mongering.
+- Use round, defensible numbers ('about', 'roughly', 'nearly' are fine).
+- For brain/psychology facts: cite the real mechanism (e.g. cerebellum predicts
+  your own touch, so it cancels the tickle response).
 
-LANGUAGE
-- Narration: natural spoken American English, like a friend telling a story - NOT a textbook.
-- SUPER EASY WORDS: a 10-year-old must understand every word on first hearing. No bookish or
-  technical words when a simple one exists ('use' not 'utilize', 'big' not 'enormous',
-  'begin' not 'commence'). Contractions are good (it's, you're, doesn't).
+============================================================
+LANGUAGE (US/UK audience optimized)
+============================================================
+- Narration: natural spoken American English, like a friend telling a story -
+  NOT a textbook. Use contractions (it's, you're, doesn't, can't).
+- SUPER EASY WORDS: a 10-year-old must understand every word on first hearing.
+  No bookish or technical words when a simple one exists
+  ('use' not 'utilize', 'big' not 'enormous', 'begin' not 'commence').
 - Plain text only: no emojis, no hashtags, no symbols like % $ & inside narration.
   Write 'percent' and 'dollars' as words. Small numbers as words ('three', 'fifty');
   big or year numbers may use digits ('1969', '8000').
 - Use commas and full stops naturally so the voice gets rhythm and breath.
 - Each scene = EXACTLY ONE short sentence, 6-12 words.
 
+============================================================
 STRUCTURE (8 to 11 scenes, 75-95 words total)
-1. HOOK (see above).
-2. One line of context - why should I care? Zero filler, go straight into the story.
+============================================================
+1. HOOK (see above). Max 8 words. First 3 words = shock/question.
+2. One line of context - why should I care? Zero filler.
 3-4. Concrete detail, a real number, then the WHY in simple words.
-5. RE-HOOK: a line that flips or escalates ('But here's the real twist.' style, in your own
-   words) and still adds NEW information. This stops the mid-video drop-off.
-6-7. The story continues. Every scene adds new info and ends on a small open loop.
+5. RE-HOOK: a line that flips or escalates ('But here's the real twist.' style,
+   in your own words) and still adds NEW information. Stops mid-video drop-off.
+6-7. Story continues. Every scene adds new info and ends on a small open loop.
 Second-last: the twist / most surprising part.
 Last scene: {plan['cta']}. Max 10 words. No 'like/subscribe' begging.
 
-VISUALS
-- search_keyword: English, 2-4 words, BROAD footage that certainly exists on free stock sites
-  (space galaxy, ocean waves, lion running, human eye closeup, city traffic night, gold coins,
-  ancient temple ruins, scientist microscope, lightning storm, sleeping person, clock ticking...).
-- Scene 1 keyword must be the most dramatic, eye-catching footage (fast motion, closeup, dark
-  and moody), because it is the first frame the viewer sees.
-- Never a brand, a person's name, or a rare species. Every scene must have a DIFFERENT keyword.
+============================================================
+VISUALS (critical for retention)
+============================================================
+- search_keyword: English, 2-4 words, BROAD footage that CERTAINLY exists on
+  Pexels/Pixabay (space galaxy, ocean waves, lion running, human eye closeup,
+  city traffic night, gold coins, ancient temple ruins, scientist microscope,
+  lightning storm, sleeping person, clock ticking, brain animation,
+  person laughing, hands touching...).
+- Scene 1 keyword must be the MOST dramatic, eye-catching footage
+  (fast motion, closeup, dark and moody) - it's the first frame the viewer sees.
+- For brain/psychology topics: use 'human brain animation', 'neurons firing',
+  'person thinking closeup', 'hands touching skin', 'person laughing slow motion'.
+- Never a brand, a person's name, or a rare species. Every scene MUST have a
+  DIFFERENT keyword.
 - Make the keyword match what is SAID in that scene, so picture and voice agree.
 
 Return ONLY valid JSON, exactly this shape:
