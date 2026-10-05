@@ -295,4 +295,50 @@ def _layout(chunk):
 
 
 def render_chunk_frame(chunk, active_idx):
-    """Transparent RGBA frame: words 0..active_idx visible, word active
+    """Transparent RGBA frame: words 0..active_idx visible, word active_idx highlighted."""
+    if "layout" not in chunk:
+        chunk["layout"] = _layout(chunk)
+    placed, height = chunk["layout"]
+
+    img = Image.new("RGBA", (TARGET_W, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    for j in range(active_idx + 1):
+        w = chunk["words"][j]
+        active = (j == active_idx)
+        size = w["size"] * (ACTIVE_SCALE if active else 1.0)
+        font = _load_font(w["font_path"], size)
+        stroke = max(7, int(size * 0.10))   # thicker stroke = readable on any bg
+        fill = w["accent"] if active else (255, 255, 255)
+        cx, base = placed[j]["cx"], placed[j]["baseline"]
+
+        # hard black shadow (offset) for maximum contrast on any footage
+        draw.text((cx + 4, base + 8), w["text"], font=font, fill=(0, 0, 0, 220),
+                  stroke_width=stroke, stroke_fill=(0, 0, 0, 220), anchor="ms")
+        # main white/accent text with black outline
+        draw.text((cx, base), w["text"], font=font, fill=fill + (255,),
+                  stroke_width=stroke, stroke_fill=(0, 0, 0, 255), anchor="ms")
+    return img
+
+
+def build_word_caption_clips(scenes, scene_timings, total_duration, seed=None):
+    """Return moviepy ImageClips (one per spoken word) ready for CompositeVideoClip."""
+    import numpy as np
+    from moviepy.editor import ImageClip
+
+    chunks = style_chunks(plan_word_events(scenes, scene_timings, total_duration), seed)
+    clips = []
+    for chunk in chunks:
+        for idx, w in enumerate(chunk["words"]):
+            t0 = w["t0"]
+            t1 = chunk["words"][idx + 1]["t0"] if idx + 1 < len(chunk["words"]) else w["t1"]
+            dur = t1 - t0
+            if dur <= 0.03 or t0 >= total_duration:
+                continue
+            dur = min(dur, total_duration - t0)
+            frame = render_chunk_frame(chunk, idx)
+            clip = ImageClip(np.array(frame), transparent=True).set_start(t0).set_duration(dur)
+            y = int(TARGET_H * CAPTION_CENTER_RATIO - frame.height / 2)
+            clips.append(clip.set_position(("center", y)))
+    print(str(len(clips)) + " word-caption frames built")
+    return clips
