@@ -24,11 +24,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 TARGET_W = 1080
 TARGET_H = 1920
-CAPTION_CENTER_RATIO = 0.60     # vertical centre of the caption block
+CAPTION_CENTER_RATIO = 0.62     # moved lower so face/motion stays visible
 MAX_LINE_W = TARGET_W - 120
 WORDS_PER_CHUNK = 3
 WORD_GAP = 28
-ACTIVE_SCALE = 1.12
+ACTIVE_SCALE = 1.15              # bigger highlight = more eye-catch
 
 FONT_DIR = os.path.join("assets", "fonts")
 _GF = "https://raw.githubusercontent.com/google/fonts/main/ofl/"
@@ -75,6 +75,8 @@ POWER_WORDS = {
     "crazy", "insane", "million", "billion", "nobody", "everyone", "why", "how", "stop",
     "warning", "real", "fake", "myth", "kill", "killed", "fire", "ice", "space", "ocean",
     "speed", "power", "fast", "time", "twist", "wrong", "mystery", "forever", "zero",
+    "tickle", "ticklish", "laugh", "laughing", "touch", "skin", "nerve", "nerves",
+    "cerebellum", "reflex", "yourself", "you're", "can't", "won't", "feel", "feels",
 }
 
 _font_cache = {}
@@ -191,7 +193,8 @@ def plan_word_events(scenes, scene_timings, total_duration):
             cum += wt
             t1 = start + dur * cum / total_w
             if k == len(words) - 1:
-                t1 = max(t1, min(scene_end, t1 + 0.25))   # hold last word until the cut
+                # hold last word ~0.35s extra so viewer can read before cut
+                t1 = max(t1, min(scene_end, t1 + 0.35))
             timed.append({"text": text, "t0": t0, "t1": t1, "ends": ends})
 
         cur = []
@@ -292,48 +295,4 @@ def _layout(chunk):
 
 
 def render_chunk_frame(chunk, active_idx):
-    """Transparent RGBA frame: words 0..active_idx visible, word active_idx highlighted."""
-    if "layout" not in chunk:
-        chunk["layout"] = _layout(chunk)
-    placed, height = chunk["layout"]
-
-    img = Image.new("RGBA", (TARGET_W, height), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-
-    for j in range(active_idx + 1):
-        w = chunk["words"][j]
-        active = (j == active_idx)
-        size = w["size"] * (ACTIVE_SCALE if active else 1.0)
-        font = _load_font(w["font_path"], size)
-        stroke = max(6, int(size * 0.09))
-        fill = w["accent"] if active else (255, 255, 255)
-        cx, base = placed[j]["cx"], placed[j]["baseline"]
-        # soft drop shadow, then outlined text
-        draw.text((cx, base + 7), w["text"], font=font, fill=(0, 0, 0, 170),
-                  stroke_width=stroke, stroke_fill=(0, 0, 0, 170), anchor="ms")
-        draw.text((cx, base), w["text"], font=font, fill=fill + (255,),
-                  stroke_width=stroke, stroke_fill=(0, 0, 0, 255), anchor="ms")
-    return img
-
-
-def build_word_caption_clips(scenes, scene_timings, total_duration, seed=None):
-    """Return moviepy ImageClips (one per spoken word) ready for CompositeVideoClip."""
-    import numpy as np
-    from moviepy.editor import ImageClip
-
-    chunks = style_chunks(plan_word_events(scenes, scene_timings, total_duration), seed)
-    clips = []
-    for chunk in chunks:
-        for idx, w in enumerate(chunk["words"]):
-            t0 = w["t0"]
-            t1 = chunk["words"][idx + 1]["t0"] if idx + 1 < len(chunk["words"]) else w["t1"]
-            dur = t1 - t0
-            if dur <= 0.03 or t0 >= total_duration:
-                continue
-            dur = min(dur, total_duration - t0)
-            frame = render_chunk_frame(chunk, idx)
-            clip = ImageClip(np.array(frame), transparent=True).set_start(t0).set_duration(dur)
-            y = int(TARGET_H * CAPTION_CENTER_RATIO - frame.height / 2)
-            clips.append(clip.set_position(("center", y)))
-    print(str(len(clips)) + " word-caption frames built")
-    return clips
+    """Transparent RGBA frame: words 0..active_idx visible, word active
