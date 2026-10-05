@@ -53,14 +53,58 @@ for directory in [TEMP_VIDEO_DIR, TEMP_AUDIO_DIR, SCENE_CLIP_DIR, OUTPUT_DIR]:
     os.makedirs(directory, exist_ok=True)
 
 KEYWORD_MAP = {
+    # Human body / brain (psychology facts)
     "brain": "human brain animation",
     "heart": "human heart beating",
     "eye": "human eye closeup",
+    "skin": "skin closeup slow motion",
+    "touch": "hands touching skin closeup",
+    "tickle": "person laughing slow motion",
+    "ticklish": "person laughing closeup",
+    "laugh": "person laughing closeup",
+    "laughing": "person laughing slow motion",
+    "nerve": "neurons firing animation",
+    "nerves": "neurons firing animation",
+    "neuron": "neurons firing animation",
+    "memory": "human brain animation",
+    "sleep": "person sleeping closeup",
+    "dream": "dreamy clouds night sky",
+    "thinking": "person thinking closeup",
+    "hand": "hands closeup slow motion",
+    "hands": "hands closeup slow motion",
+    "finger": "fingers moving closeup",
+    "fingers": "fingers moving closeup",
+    "reflex": "human body animation",
+    "cerebellum": "human brain animation",
+    # Money / wealth
     "money": "money cash dollars",
     "gold": "gold coins treasure",
+    # Nature / disasters
     "volcano": "volcano eruption lava",
     "lightning": "lightning storm sky",
     "tsunami": "tsunami wave ocean",
+    "earthquake": "earthquake cracked ground",
+    "storm": "storm clouds dramatic",
+    # Space
+    "space": "space galaxy stars",
+    "galaxy": "space galaxy stars",
+    "planet": "planet space animation",
+    "star": "stars night sky timelapse",
+    "stars": "stars night sky timelapse",
+    # Ocean / animals
+    "ocean": "ocean waves underwater",
+    "shark": "shark swimming underwater",
+    "whale": "whale ocean underwater",
+    "deep sea": "deep sea creatures dark",
+    # Tech
+    "computer": "computer code screen",
+    "phone": "smartphone closeup hands",
+    "robot": "robot machine closeup",
+    "internet": "server data center",
+    # Ancient
+    "pyramid": "ancient pyramid egypt",
+    "temple": "ancient temple ruins",
+    "mummy": "ancient mummy museum",
 }
 
 TITLE_POOL = [
