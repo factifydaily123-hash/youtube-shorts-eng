@@ -1,0 +1,13 @@
+google-genai>=1.0.0
+google-generativeai
+requests
+moviepy==1.0.3
+Pillow==9.5.0
+numpy==1.26.4
+gTTS
+edge-tts
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+imageio
+imageio-ffmpeg
