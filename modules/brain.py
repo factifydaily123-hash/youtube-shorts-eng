@@ -1,16 +1,17 @@
 """
 Script engine (Gemini) - English edition.
 
-- Narration is plain spoken ENGLISH (the TTS voice is an en-US neural voice).
-- On-screen word-by-word captions are the exact same English words.
-- Two passes: writer -> strict fact-check/editor.
-- Topic history stores the last facts and titles; Gemini is told to avoid them.
-- Story structure with a real hook, a payoff, and a loop-back ending.
-- Symbols / % / $ / stray characters are cleaned so TTS never stumbles.
-- Optimized for US/UK audience retention (psychology/brain facts, strong hooks).
-- KEYWORD DISCIPLINE: every scene's search_keyword MUST be footage that
-  ACTUALLY EXISTS on Pexels/Pixabay and MUST visually match the spoken line.
-  This is what kills the "clips mismatch" problem.
+IMPORTANT: Ye version Gemini ko kabhi aise keywords use karne hi nahi dega
+jinki REAL stock footage (Pexels/Pixabay par) maujood nahi hoti.
+Isliye ab yahi rule hai: agar scene ko film karna mushkil hai
+(named species, specific cell, specific historical figure, labeled animation),
+to writer us SCENE KO REWRITE karega taake footage match kar sake - fact ki
+quality kam NAHI hogi, sirf shot simple ho jayega.
+
+Yehi 'bullet ant' problem ka asli hal hai:
+  - Writer ek aise angle pe story likhega jise REAL footage se film kiya ja sake.
+  - Ya wo 'ant macro closeup' jaisa common keyword use karega aur narration bhi
+    usi hisaab se likhega, taake screen aur voice match karein.
 """
 
 import json
@@ -72,8 +73,7 @@ FORMATS = {
     ),
     "personal_what_if": (
         "A 'what if this happened to YOU' scenario grounded in real science. "
-        "Speak directly to the viewer (you). Only real, well-established consequences - "
-        "no invented numbers, no fake 'X will kill you' claims."
+        "Speak directly to the viewer (you). Only real, well-established consequences."
     ),
     "myth_vs_truth": (
         "Start with a very common belief, then reveal the truth with a real reason. "
@@ -95,6 +95,66 @@ CTA_STYLES = [
     "a soft question that invites a comment (e.g. which one surprised you most)",
     "a curiosity teaser for the next video, no begging for likes",
 ]
+
+
+# ---------------------------------------------------------------------
+# HARD FILMABILITY FILTER
+# ---------------------------------------------------------------------
+# Ye words scene keyword mein allowed NAHI hain kyunki:
+#   - ya to footage unki exist hi nahi karti
+#   - ya jo milti hai, wo scene se match nahi karti
+# Agar writer ne aisa keyword diya, to scene ko rewrite karna padega.
+FORBIDDEN_KEYWORD_WORDS = {
+    # named species that stock sites don't tag specifically
+    "bullet", "paraponera", "clavata", "tarantula", "hawk", "moth",
+    "cobra", "python", "anaconda", "komodo", "dragon",
+    # named diseases / conditions
+    "cancer", "tumor", "alzheimer", "parkinson", "epilepsy", "autism",
+    "adhd", "depression", "anxiety", "ptsd", "ocd",
+    # named chemicals / molecules
+    "dopamine", "serotonin", "melatonin", "cortisol", "insulin",
+    "adrenaline", "histamine", "oxytocin",
+    # named historical people / brands
+    "einstein", "newton", "tesla", "edison", "darwin", "hawking",
+    "nasa", "spacex", "google", "apple", "microsoft", "tesla",
+    # specific numbers/anatomy that can't be filmed distinctly
+    "cerebellum", "hippocampus", "amygdala", "neuron", "synapse",
+    # specific objects that stock won't have
+    "quetzal", "siphonophore", "apolemia", "hura", "crepitans",
+}
+
+# Words that ARE always safe and filmable
+SAFE_KEYWORD_WHITELIST = {
+    "human", "brain", "eye", "eyes", "hand", "hands", "finger", "fingers",
+    "skin", "face", "head", "person", "people", "man", "woman", "child",
+    "sleeping", "sleep", "dream", "thinking", "laugh", "laughing", "smile",
+    "touch", "touching", "tickle", "walking", "running", "sitting",
+    "ocean", "sea", "wave", "waves", "underwater", "fish", "shark", "whale",
+    "space", "galaxy", "star", "stars", "planet", "earth", "moon", "rocket",
+    "fire", "flame", "flames", "ice", "snow", "rain", "storm", "lightning",
+    "volcano", "lava", "earthquake", "desert", "mountain", "forest", "tree",
+    "trees", "plant", "leaf", "leaves", "flower", "ant", "bee", "insect",
+    "spider", "cat", "dog", "lion", "tiger", "bird", "city", "traffic",
+    "night", "street", "car", "clock", "time", "hourglass", "money", "gold",
+    "coin", "coins", "computer", "laptop", "phone", "smartphone", "robot",
+    "food", "cooking", "water", "glass", "kitchen", "pyramid", "temple",
+    "museum", "scientist", "lab", "microscope", "cells", "muscle", "body",
+    "abstract", "background", "dark", "closeup", "macro", "slow", "motion",
+}
+
+
+def _keyword_is_filmable(keyword):
+    """
+    True agar keyword mein koi forbidden word nahi, aur kam se kam ek
+    word whitelist ya plain english noun ho.
+    """
+    if not keyword or len(keyword.split()) < 2:
+        return False
+    kw_lower = keyword.lower()
+    for bad in FORBIDDEN_KEYWORD_WORDS:
+        if re.search(rf"\b{re.escape(bad)}\b", kw_lower):
+            return False
+    return True
 
 
 # ----------------------------------------------------------- history ----
@@ -147,7 +207,6 @@ def pick_plan(history_path):
 
 # ------------------------------------------------- text sanitising ----
 def sanitize_narration(text):
-    """Make a line safe and natural for English TTS."""
     text = str(text)
     text = re.sub(r"\$\s?(\d[\d,\.]*)", r"\1 dollars", text)
     text = text.replace("%", " percent")
@@ -205,7 +264,6 @@ _NON_ENGLISH = re.compile(r"[\u0900-\u097F\u0600-\u06FF]")
 
 
 def normalize_and_validate(data):
-    """Return (script, problems). Script is cleaned; problems is a list of strings."""
     problems = []
     if not isinstance(data, dict):
         return None, ["not a dict"]
@@ -235,10 +293,15 @@ def normalize_and_validate(data):
             problems.append(f"scene {i} too long ({len(words)} words)")
         if not sc["search_keyword"]:
             problems.append(f"scene {i} missing search_keyword")
-        # keyword must be 2-4 simple english words, no punctuation
         kw_words = sc["search_keyword"].split()
         if len(kw_words) < 2 or len(kw_words) > 4:
             problems.append(f"scene {i} search_keyword not 2-4 words: '{sc['search_keyword']}'")
+        # HARD FILMABILITY CHECK
+        if not _keyword_is_filmable(sc["search_keyword"]):
+            problems.append(
+                f"scene {i} keyword '{sc['search_keyword']}' is NOT filmable on stock sites "
+                f"(named species/molecule/person/etc)"
+            )
 
     if scenes and len(scenes[0]["narration"].split()) > 9:
         problems.append("hook longer than 9 words")
@@ -298,46 +361,34 @@ HOOK (scene 1) - THIS IS 90% OF THE VIDEO'S SUCCESS
 ============================================================
 - Max 8 words. The FIRST 3 WORDS must create shock, danger, or an open question.
 - NEVER start with 'Did you know', 'Have you ever', or any greeting. Start mid-action.
-- The hook must feel like the viewer is ALREADY in the middle of a story.
-- Use ONE of these 5 proven patterns (styles only, do NOT copy examples):
-
-  1. BOLD TRUE CLAIM that sounds wrong:
-     'Your brain lies to you every day.'
-  2. WARNING to the viewer (direct 'you'):
-     'Never do this before you sleep.'
-  3. IMPOSSIBLE THING that grabs attention:
-     'This animal comes back to life.'
-  4. DIRECT QUESTION that hurts curiosity:
-     'Why can't you tickle yourself?'
-  5. STAKES / COUNTDOWN:
-     'Just three seconds, and everything changes.'
-
-- For PSYCHOLOGY / BRAIN facts: start with the weirdest symptom or result first.
+- Use ONE of these 5 patterns:
+  1. Bold true claim that sounds wrong: 'Your brain lies to you every day.'
+  2. Warning to the viewer: 'Never do this before you sleep.'
+  3. Impossible thing: 'This animal comes back to life.'
+  4. Direct question: 'Why can't you tickle yourself?'
+  5. Countdown/stakes: 'Just three seconds, and everything changes.'
 - The hook must be TRUTHFULLY paid off in the last scenes. No clickbait lies.
-- Scene 1 caption = the 2-3 most shocking words, UPPERCASE-friendly.
 
 ============================================================
 ACCURACY (non-negotiable)
 ============================================================
-- Only real, well-established facts. If unsure, choose a different fact.
-- No invented statistics. No 'X will kill you' style medical fear-mongering.
-- Use round, defensible numbers ('about', 'roughly', 'nearly' are fine).
+- Only real, well-established facts. If unsure, pick another fact.
+- No invented statistics. No 'X will kill you' style fear-mongering.
+- Round, defensible numbers ('about', 'roughly', 'nearly' are fine).
 
 ============================================================
-LANGUAGE (US/UK audience optimized)
+LANGUAGE
 ============================================================
-- Narration: natural spoken American English, like a friend telling a story.
+- Natural spoken American English, like a friend telling a story.
 - SUPER EASY WORDS: a 10-year-old must understand every word on first hearing.
 - Plain text only: no emojis, no hashtags, no symbols like % $ & inside narration.
-  Write 'percent' and 'dollars' as words.
-- Use commas and full stops naturally so the voice gets rhythm and breath.
 - Each scene = EXACTLY ONE short sentence, 6-12 words.
 
 ============================================================
 STRUCTURE (8 to 11 scenes, 75-95 words total)
 ============================================================
 1. HOOK (see above). Max 8 words. First 3 words = shock/question.
-2. One line of context - why should I care? Zero filler.
+2. One line of context. Zero filler.
 3-4. Concrete detail, a real number, then the WHY in simple words.
 5. RE-HOOK: a line that flips or escalates and still adds NEW information.
 6-7. Story continues. Every scene adds new info and ends on a small open loop.
@@ -345,7 +396,7 @@ Second-last: the twist / most surprising part.
 Last scene: {plan['cta']}. Max 10 words. No 'like/subscribe' begging.
 
 ============================================================
-VISUAL-KEYWORD DISCIPLINE (THE MOST IMPORTANT RULE)
+VISUAL-KEYWORD DISCIPLINE (READ THIS TWICE)
 ============================================================
 The stock-footage search_keyword is the difference between a video that looks
 PROFESSIONAL and one that looks like a random clip-dump. Follow these rules
@@ -353,61 +404,73 @@ WITHOUT EXCEPTION:
 
 RULE 1 - KEYWORD MUST SHOW WHAT THE SCENE SAYS.
    If the scene says 'your brain predicts your own touch', the keyword must be
-   'hand touching skin' or 'person arm closeup' - NOT 'space galaxy'.
-   The viewer must feel the picture matches the voice word-for-word.
+   'hand touching skin' - NOT 'space galaxy'.
+   If the scene says 'this ant's sting feels like a gunshot', the keyword must
+   be something like 'ant macro closeup' or 'insect closeup macro' - NOT
+   'bullet ant' (Pexels/Pixabay don't tag that species).
 
-RULE 2 - ONLY USE FOOTAGE THAT REALLY EXISTS ON PEXELS/PIXABAY.
-   These sites have HUGE libraries of: humans (hands, faces, eyes, walking,
-   laughing, sleeping, exercising), nature (forests, oceans, mountains, storms,
-   lightning, fire, ice, deserts), animals (cats, dogs, lions, birds, fish,
-   insects), space (galaxy, stars, earth from space, moon, rockets), city
-   (traffic, night lights, crowds), science (microscope, lab, liquid, smoke,
-   fire experiments), food (cooking, fruit, water pouring, coffee), objects
-   (clocks, coins, books, phones, computers).
-   They DO NOT have: specific brain neurons firing, specific named diseases,
-   microscopic cells labelled, historical figures, fake 3D medical animations,
-   or named brands.
-   -> NEVER use keywords like 'cerebellum animation', 'dopamine synapse',
-      'Neuron 3D render', 'Albert Einstein portrait'. They will fail and force
-      a random fallback clip (which is the EXACT mismatch you must avoid).
+RULE 2 - ONLY USE FILMABLE, GENERIC KEYWORDS.
+   Allowed vocabulary (use ONLY words from this list plus basic adjectives
+   like 'closeup', 'slow', 'dark', 'macro', 'night', 'underwater'):
+     human body: human brain animation, hand touching skin, face closeup,
+                 person thinking, person laughing, person sleeping,
+                 human eye closeup, head closeup person, fingers moving,
+                 muscle closeup, athlete training, doctor examining patient
+     animals:    ant macro closeup, insect macro closeup, bee flower closeup,
+                 spider web macro, cat looking camera, dog running grass,
+                 lion running savanna, bird flying sky, fish underwater
+     nature:     ocean waves underwater, lightning storm sky, volcano eruption lava,
+                 forest fog morning, desert sand dunes, snow falling,
+                 rain window moody, fire flames dark, ice glacier arctic
+     space:      space galaxy stars, earth from space, moon closeup, rocket launching space,
+                 stars night sky
+     city:       city traffic night, city street aerial, car driving road,
+                 crowd people walking, street at night
+     objects:    money cash dollars, gold coins treasure, clock ticking closeup,
+                 hourglass sand, water pouring glass, food cooking closeup
+     tech:       computer code screen, laptop closeup hands, smartphone closeup hands,
+                 robot machine closeup, server data center
+     ancient:    ancient temple ruins, ancient pyramid egypt, museum artifact closeup,
+                 old stone wall, old manuscript closeup
+     science:    microscope science lab, scientist laboratory, liquid pouring closeup,
+                 smoke slow motion
+     abstract:   abstract background dark, particles floating light
 
-RULE 3 - CONVERT ABSTRACT IDEAS INTO FILMABLE SHOTS.
-   Bad: 'your brain ignores you' -> keyword 'brain ignoring'
-   Good: 'your brain ignores you' -> keyword 'hand touching arm'
-   Bad: 'cerebellum cancels the signal' -> keyword 'cerebellum signal'
-   Good: 'cerebellum cancels the signal' -> keyword 'human brain animation'
-        (only if you can be sure 'human brain animation' footage exists - it does)
-   Bad: 'you feel ticklish' -> keyword 'ticklish feeling'
-   Good: 'you feel ticklish' -> keyword 'person laughing closeup'
+   FORBIDDEN (stock sites DON'T tag these, and if forced you'll get a
+   random clip that mismatches the narration):
+     - Named species (bullet ant, tarantula hawk, komodo dragon, quetzal...)
+     - Named molecules (dopamine, serotonin, insulin, adrenaline...)
+     - Named diseases (cancer, alzheimer, parkinson...)
+     - Named brain parts (cerebellum, hippocampus, amygdala...)
+     - Named people/brands (Einstein, Tesla, NASA, Apple...)
+     - Anything like 'cerebellum cancels the signal' or 'dopamine spike'.
+   Instead, use a METAPHOR SHOT that the viewer will accept:
+     - 'cerebellum' -> 'human brain animation' or 'head closeup person'
+     - 'dopamine'   -> 'person smiling closeup' or 'human brain animation'
+     - 'bullet ant' -> 'ant macro closeup' or 'insect macro closeup'
+     - 'quetzal'    -> 'colorful bird flying' or 'bird closeup'
 
-RULE 4 - 2-4 WORDS, PLAIN ENGLISH, NO PUNCTUATION, NO NAMES.
+RULE 3 - 2-4 WORDS, PLAIN ENGLISH, NO PUNCTUATION, NO NAMES.
    Format: '<subject> <action>' or '<subject> <closeup>'.
-   Examples that ALWAYS work:
-     'human eye closeup', 'hand touching skin', 'person laughing',
-     'woman sleeping', 'human brain animation', 'neurons firing',
-     'ocean waves underwater', 'lightning storm sky', 'space galaxy stars',
-     'city traffic night', 'gold coins closeup', 'clock ticking closeup',
-     'fire flames dark', 'microscope science lab', 'water pouring glass',
-     'cat looking camera', 'lion running savanna', 'rocket launching space',
-     'smartphone closeup hands', 'forest fog morning', 'person thinking window'.
 
-RULE 5 - EVERY SCENE GETS A DIFFERENT KEYWORD. Never repeat the same keyword twice.
+RULE 4 - EVERY SCENE GETS A DIFFERENT KEYWORD.
    But every keyword must STILL match its own scene's narration.
 
-RULE 6 - SCENE 1 (HOOK) = MOST DRAMATIC, EYE-CATCHING FOOTAGE.
-   Use fast motion, closeup, dark and moody, or a striking image. Something that
-   stops the thumb mid-scroll (fire, lightning, extreme closeup of an eye,
-   running animal, dark city street at night). NEVER a calm landscape as scene 1.
+RULE 5 - SCENE 1 (HOOK) = MOST DRAMATIC, EYE-CATCHING FOOTAGE.
+   Fast motion, closeup, dark and moody, or striking (fire, lightning,
+   extreme eye closeup, running animal, dark city street at night).
+   NEVER a calm landscape as scene 1.
 
-RULE 7 - DO NOT CHANGE THE FACT TO FIT THE CLIP.
-   Keep the fact accurate and interesting. If a fact is hard to film (e.g. it
-   happens inside a cell), pick a metaphor shot the viewer will accept as a
-   stand-in (microscope, liquid, slow-motion human skin closeup, scientist at
-   microscope). Never invent a fake visual claim.
+RULE 6 - DO NOT CHANGE THE FACT TO FIT THE CLIP.
+   Keep the fact accurate. If it's hard to film (e.g. happens inside a cell),
+   use a metaphor shot ('microscope science lab' or 'human brain animation'
+   or 'liquid pouring closeup'). Never invent a fake visual claim.
 
-SELF-CHECK before you return the JSON: for each scene, ask yourself
+SELF-CHECK before returning the JSON: for each scene, ask yourself
 'If a viewer heard this exact sentence and saw ONLY this exact keyword's clip,
-would they nod and think yes, this matches?' If NO, change the keyword.
+would they nod and think yes, this matches?'
+If NO, change the keyword OR rewrite the scene's narration to match a filmable keyword.
+The narration is what you can flex on - the FACT must stay accurate.
 
 Return ONLY valid JSON, exactly this shape:
 {_SCHEMA}
@@ -416,8 +479,8 @@ Return ONLY valid JSON, exactly this shape:
 
 def _editor_prompt(draft_json):
     return f"""
-You are a strict fact-checker, retention editor AND visual-continuity editor for
-an English YouTube Shorts facts channel. Below is a draft script (JSON).
+You are a strict fact-checker, retention editor AND visual-continuity editor
+for an English YouTube Shorts facts channel. Below is a draft script (JSON).
 Return the FINAL JSON in the exact same schema.
 
 CHECKLIST
@@ -426,7 +489,6 @@ CHECKLIST
    is true. Remove invented numbers.
 2. Hook: max 8 words. First 3 words must create shock, danger or a burning
    question. Rewrite it if it sounds like an intro, a greeting or a textbook line.
-   The hook must be truthfully paid off.
 3. Every scene: one sentence, 6-12 words, natural spoken English, simple everyday
    words a 10-year-old knows. No emojis or symbols inside narration.
 4. Cut filler. Each scene must add new info. Keep 8-11 scenes, 75-95 words total.
@@ -438,14 +500,26 @@ CHECKLIST
    For EVERY scene, read the narration and the search_keyword together.
    If a viewer hearing the narration and seeing only that keyword's clip would
    feel a mismatch, REWRITE the search_keyword so it matches the spoken line.
-   Replace abstract / non-filmable keywords ('cerebellum signal', 'dopamine
-   spike', 'brain ignoring self') with filmable, common footage keywords
-   ('human brain animation', 'hand touching skin', 'person laughing closeup').
    - Keyword = 2-4 plain english words, no punctuation, no names, no brands.
    - Every scene must use a DIFFERENT keyword.
    - Scene 1 must be the most dramatic footage (closeup / fast / dark / striking).
-   - Never invent a keyword for something stock sites don't have
-     (no 'named historical figure', no 'specific labelled cell', no 'brand logo').
+
+8. HARD FILMABILITY FILTER (reject these keywords):
+   - NO named species (bullet ant, tarantula hawk, komodo dragon, quetzal)
+   - NO named molecules (dopamine, serotonin, insulin, adrenaline)
+   - NO named diseases (cancer, alzheimer, parkinson)
+   - NO named brain parts (cerebellum, hippocampus, amygdala)
+   - NO named people/brands (Einstein, Tesla, NASA, Apple)
+   - NO abstract things that can't be filmed ('cerebellum signal',
+     'dopamine spike', 'brain ignoring self')
+   If the writer's keyword has any of these, REPLACE it with a filmable metaphor:
+     - cerebellum  -> 'human brain animation' or 'head closeup person'
+     - dopamine    -> 'person smiling closeup' or 'human brain animation'
+     - bullet ant  -> 'ant macro closeup' or 'insect macro closeup'
+     - quetzal     -> 'colorful bird flying' or 'bird closeup'
+     - cancer cell -> 'microscope science lab' or 'liquid pouring closeup'
+   Then, if needed, lightly rewrite the scene's narration so the metaphor shot
+   feels natural. DO NOT change the fact itself.
 
 Return ONLY the corrected JSON.
 
