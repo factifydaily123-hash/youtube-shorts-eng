@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+venv/
+
+# Environment variables (Critical for security)
+.env
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Build outputs
+/dist
+/build
+/video-gen
+/assets/audio_clips
+/assets/final
+/assets/temp
+/assets/video_clips
+/modules/__pycache__
+/assets/avatar/avatar.mp4
+/assets/avatar/Gemini_Generated_Image_ww2ko4ww2ko4ww2k.png
+*.log
