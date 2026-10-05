@@ -117,10 +117,10 @@ class ShortsComposer:
                 raise RuntimeError("Subclip fail: " + path + ": " + str(e))
 
         fitted = ShortsComposer._fit_vertical(clip)
-        # slow punch-in = constant motion, keeps eyes on the screen
+        # slow punch-in = constant motion, keeps eyes on the screen (12% zoom)
         try:
             d = max(duration, 0.5)
-            zoomed = fitted.resize(lambda t: 1 + 0.08 * min(t, d) / d)
+            zoomed = fitted.resize(lambda t: 1 + 0.12 * min(t, d) / d)
             return CompositeVideoClip(
                 [zoomed.set_position("center")], size=(TARGET_W, TARGET_H)
             ).set_duration(fitted.duration)
