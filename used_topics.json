@@ -397,6 +397,13 @@
       "format": "personal_what_if",
       "title": "You lose a whole day here ⏰",
       "fact": "Time zones force countries to skip calendar days or use non-integer offsets like 45-minute intervals."
+    },
+    {
+      "date": "2026-10-06T19:47:33",
+      "category": "deep ocean and sea animals",
+      "format": "shocking_fact",
+      "title": "This fish sees through its own head! 🐠",
+      "fact": "Deep ocean barreleye fish have a transparent fluid-filled head that lets them look directly upward through their skull using tubular green eyes."
     }
   ]
 }
