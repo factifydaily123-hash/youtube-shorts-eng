@@ -44,9 +44,25 @@ concurrency:
 jobs:
   build-and-run:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # random delay (max ~45 min) + build/upload (~10 min) -> keep headroom
+    timeout-minutes: 90
 
     steps:
+    # ---------------------------------------------------------------
+    # Human-like posting time: wait a random 15-44 min (+ random seconds)
+    # after the cron fires, so uploads never land at exact robotic times.
+    # Only for scheduled runs - manual "Run workflow" starts immediately.
+    # NOTE: sleeping uses runner minutes (free on public repos).
+    # ---------------------------------------------------------------
+    - name: Random posting delay (15-45 min)
+      if: github.event_name == 'schedule'
+      run: |
+        MIN_MIN=15
+        SPAN_MIN=30
+        DELAY=$(( (RANDOM % SPAN_MIN + MIN_MIN) * 60 + RANDOM % 60 ))
+        echo "Sleeping $((DELAY / 60)) min $((DELAY % 60)) s before generating/posting..."
+        sleep "$DELAY"
+
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
@@ -100,6 +116,7 @@ jobs:
         pip show edge-tts | grep Version || echo "edge-tts not installed"
 
     - name: Run Auto-Generation & Auto-Posting Script
+      timeout-minutes: 30
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
@@ -125,9 +142,12 @@ jobs:
         TTS_VOICE_FALLBACK2: 'en-US-GuyNeural'
         TTS_VOICE_FALLBACK3: 'en-GB-RyanNeural'
 
-        # Voice rate/pitch defaults
+        # Voice speed = 1.15x
         TTS_RATE: '+15%'
         TTS_PITCH: '+0Hz'
+
+        # Last scene re-uses the hook footage -> seamless visual loop
+        LOOP_VISUAL: '1'
       run: python main.py
 
     - name: Commit used_topics.json back to repo
