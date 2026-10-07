@@ -2,7 +2,7 @@ name: Auto Generate and Post YouTube Shorts
 
 on:
   schedule:
-    # Base times (US prime-time ET). Actual post = base + random 15-45 min.
+    # Base times (US prime-time ET). Actual post = base + random 15-45 min delay.
     - cron: '0 15 * * *'   # ~11:00 AM ET
     - cron: '0 19 * * *'   # ~3:00 PM ET
     - cron: '0 23 * * *'   # ~7:00 PM ET
@@ -43,9 +43,18 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
-          ffmpeg imagemagick libjpeg-dev zlib1g-dev libpng-dev \
-          libfreetype6-dev fonts-noto fonts-noto-color-emoji \
-          fonts-dejavu fonts-dejavu-core fonts-liberation fontconfig
+          ffmpeg \
+          imagemagick \
+          libjpeg-dev \
+          zlib1g-dev \
+          libpng-dev \
+          libfreetype6-dev \
+          fonts-noto \
+          fonts-noto-color-emoji \
+          fonts-dejavu \
+          fonts-dejavu-core \
+          fonts-liberation \
+          fontconfig
         sudo fc-cache -f -v
 
     - name: Fix ImageMagick Policy
@@ -57,6 +66,19 @@ jobs:
       run: |
         python -m pip install --upgrade pip setuptools wheel
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Verify Fonts + FFmpeg
+      run: |
+        echo "=== DejaVu fonts ==="
+        ls -la /usr/share/fonts/truetype/dejavu/ || echo "DejaVu fonts not found"
+        echo "=== Liberation fonts ==="
+        ls -la /usr/share/fonts/truetype/liberation/ || echo "Liberation fonts not found"
+        echo "=== fc-list check ==="
+        fc-list | grep -i "dejavu\|liberation" | head -5
+        echo "=== FFmpeg ==="
+        ffmpeg -version | head -1
+        echo "=== edge-tts version ==="
+        pip show edge-tts | grep Version || echo "edge-tts not installed"
 
     - name: Run Auto-Generation & Auto-Posting Script
       env:
@@ -72,11 +94,21 @@ jobs:
         TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
         TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
         TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+
+        # Captions
         WORD_CAPTIONS: '1'
         ENABLE_CAPTIONS: '0'
         HOOK_CAPTION: '1'
-        TTS_VOICE: 'en-US-GuyNeural'
+
+        # Voice chain (Edge-TTS "ElevenLabs Killer" setup)
+        TTS_VOICE_PRIMARY: 'en-US-AndrewMultilingualNeural'
+        TTS_VOICE_FALLBACK1: 'en-US-BrianMultilingualNeural'
+        TTS_VOICE_FALLBACK2: 'en-US-GuyNeural'
+        TTS_VOICE_FALLBACK3: 'en-GB-RyanNeural'
+
+        # Voice rate/pitch defaults (per-scene curve main.py se aata hai)
         TTS_RATE: '+15%'
+        TTS_PITCH: '+0Hz'
       run: python main.py
 
     - name: Commit used_topics.json back to repo
