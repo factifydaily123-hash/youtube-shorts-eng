@@ -52,61 +52,6 @@ OUTPUT_DIR = os.path.join(ASSETS_DIR, "final")
 for directory in [TEMP_VIDEO_DIR, TEMP_AUDIO_DIR, SCENE_CLIP_DIR, OUTPUT_DIR]:
     os.makedirs(directory, exist_ok=True)
 
-KEYWORD_MAP = {
-    # Human body / brain (psychology facts)
-    "brain": "human brain animation",
-    "heart": "human heart beating",
-    "eye": "human eye closeup",
-    "skin": "skin closeup slow motion",
-    "touch": "hands touching skin closeup",
-    "tickle": "person laughing slow motion",
-    "ticklish": "person laughing closeup",
-    "laugh": "person laughing closeup",
-    "laughing": "person laughing slow motion",
-    "nerve": "neurons firing animation",
-    "nerves": "neurons firing animation",
-    "neuron": "neurons firing animation",
-    "memory": "human brain animation",
-    "sleep": "person sleeping closeup",
-    "dream": "dreamy clouds night sky",
-    "thinking": "person thinking closeup",
-    "hand": "hands closeup slow motion",
-    "hands": "hands closeup slow motion",
-    "finger": "fingers moving closeup",
-    "fingers": "fingers moving closeup",
-    "reflex": "human body animation",
-    "cerebellum": "human brain animation",
-    # Money / wealth
-    "money": "money cash dollars",
-    "gold": "gold coins treasure",
-    # Nature / disasters
-    "volcano": "volcano eruption lava",
-    "lightning": "lightning storm sky",
-    "tsunami": "tsunami wave ocean",
-    "earthquake": "earthquake cracked ground",
-    "storm": "storm clouds dramatic",
-    # Space
-    "space": "space galaxy stars",
-    "galaxy": "space galaxy stars",
-    "planet": "planet space animation",
-    "star": "stars night sky timelapse",
-    "stars": "stars night sky timelapse",
-    # Ocean / animals
-    "ocean": "ocean waves underwater",
-    "shark": "shark swimming underwater",
-    "whale": "whale ocean underwater",
-    "deep sea": "deep sea creatures dark",
-    # Tech
-    "computer": "computer code screen",
-    "phone": "smartphone closeup hands",
-    "robot": "robot machine closeup",
-    "internet": "server data center",
-    # Ancient
-    "pyramid": "ancient pyramid egypt",
-    "temple": "ancient temple ruins",
-    "mummy": "ancient mummy museum",
-}
-
 TITLE_POOL = [
     "How Is This Even Possible? \U0001F631",
     "The Biggest Secret On Earth!",
@@ -125,7 +70,6 @@ BASE_TAGS = [
 
 
 def get_youtube_channel():
-    """Single YouTube channel, configured through the YOUTUBE_* secrets."""
     return {
         "name": "YouTube",
         "client_id": YOUTUBE_CLIENT_ID,
@@ -148,28 +92,20 @@ def notify_telegram(message: str):
         print(f"Telegram notify failed: {e}")
 
 
-def get_optimized_search_query(text):
-    key = re.sub(r"\s+", " ", (text or "").lower()).strip()
-    return KEYWORD_MAP.get(key, text)
-
-
 def build_scene_voiceovers(scenes, audio_dir):
-    """Generate one English voiceover mp3 per scene inside audio_dir."""
     paths = []
     for index, scene in enumerate(scenes, start=1):
         path = os.path.join(audio_dir, f"scene_{index:02d}.mp3")
         if os.path.exists(path):
             os.remove(path)
-
         if index == 1:
-            rate, pitch = "+0%", "-3Hz"
+            rate, pitch = "+15%", "-3Hz"      # hook: fast and punchy
         elif index == len(scenes) - 1 and len(scenes) > 4:
-            rate, pitch = "-4%", "-3Hz"
+            rate, pitch = "+5%", "-3Hz"        # loop line: slightly slower, closer
         elif index == len(scenes):
-            rate, pitch = "+4%", "+0Hz"
+            rate, pitch = "+10%", "+0Hz"
         else:
             rate, pitch = None, None
-
         for attempt in range(1, 4):
             try:
                 generate_voiceover(scene["narration"], path, rate=rate, pitch=pitch)
@@ -185,19 +121,20 @@ def build_scene_voiceovers(scenes, audio_dir):
 
 
 def build_scene_clips(scenes, clip_dir):
-    """Download one stock clip per scene into clip_dir."""
     shutil.rmtree(clip_dir, ignore_errors=True)
     os.makedirs(clip_dir, exist_ok=True)
-
     paths = []
     for index, scene in enumerate(scenes, start=1):
         target = os.path.join(clip_dir, f"scene_{index:02d}.mp4")
-        keyword = scene.get("search_keyword") or "nature landscape"
-        query = get_optimized_search_query(keyword)
-        print(f"Scene {index}: '{query}'")
-
+        keyword = scene.get("search_keyword") or "abstract background dark"
+        print(f"Scene {index}: '{keyword}'")
         try:
-            fetch_scene_video(query, target, min_duration=3)
+            fetch_scene_video(
+                keyword,
+                target,
+                min_duration=3,
+                narration=scene.get("narration", ""),
+            )
             paths.append(target)
         except Exception as e:
             print(f"Scene {index} ka clip nahi mila: {e}")
@@ -211,9 +148,7 @@ def build_metadata(script, full_narration):
     title_core = re.sub(r"#\S+", "", script.get("title", "")).strip()
     if not title_core:
         title_core = random.choice(TITLE_POOL)
-
     title = f"{title_core[:75].strip()} #Shorts"[:95]
-
     tags, seen, total_chars = [], set(), 0
     for tag in script.get("tags", []) + BASE_TAGS:
         tag = re.sub(r"[#,<>]", "", tag).strip().lower()
@@ -224,13 +159,10 @@ def build_metadata(script, full_narration):
         seen.add(tag)
         tags.append(tag)
         total_chars += len(tag) + 1
-
     hashtags, seen_h = [], set()
-    candidates = ["#Shorts", "#Facts", "#AmazingFacts", "#FunFacts", "#CrazyFacts", "#DidYouKnow", "#WhatIf", "#MindBlown"]
-    candidates += [
-        "#" + re.sub(r"[^0-9a-zA-Z]", "", t)
-        for t in script.get("tags", [])
-    ]
+    candidates = ["#Shorts", "#Facts", "#AmazingFacts", "#FunFacts",
+                  "#CrazyFacts", "#DidYouKnow", "#WhatIf", "#MindBlown"]
+    candidates += ["#" + re.sub(r"[^0-9a-zA-Z]", "", t) for t in script.get("tags", [])]
     for candidate in candidates:
         key = candidate.lower()
         if len(candidate) < 3 or key in seen_h:
@@ -239,48 +171,36 @@ def build_metadata(script, full_narration):
         hashtags.append(candidate)
         if len(hashtags) >= 10:
             break
-
     body = script.get("description") or full_narration
     description = f"{body}\n\n{' '.join(hashtags)}"[:4900]
-
     return title, description, tags
 
 
 def generate_thumbnail(video_path: str, output_path: str, title_text: str):
     import subprocess
-
     if not os.path.exists(video_path):
         return None
-
     frame_path = output_path + ".frame.jpg"
     subprocess.run(
-        [
-            "ffmpeg", "-y", "-ss", "1", "-i", video_path,
-            "-frames:v", "1", "-q:v", "2", frame_path,
-        ],
+        ["ffmpeg", "-y", "-ss", "1", "-i", video_path,
+         "-frames:v", "1", "-q:v", "2", frame_path],
         capture_output=True,
     )
-
     if not os.path.exists(frame_path):
-        print("Thumbnail frame extract nahi ho paya.")
         return None
-
     safe_title = re.sub(r"[^\x20-\x7E]", "", title_text)
     safe_title = re.sub(r'[":\'\\\n\r%]', "", safe_title)[:40].strip()
     if not safe_title:
         safe_title = "Amazing Fact"
-
     font_candidates = [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
     ]
     font_file = next((f for f in font_candidates if os.path.exists(f)), None)
-
     vf_parts = [
         "scale=1080:1920:force_original_aspect_ratio=increase",
         "crop=1080:1920",
     ]
-
     if font_file:
         vf_parts.append(
             f"drawtext=text='{safe_title}':"
@@ -289,31 +209,20 @@ def generate_thumbnail(video_path: str, output_path: str, title_text: str):
             f"x=(w-text_w)/2:y=h*0.75:"
             f"fontfile={font_file}"
         )
-
     cmd = [
         "ffmpeg", "-y", "-i", frame_path,
         "-vf", ",".join(vf_parts),
-        "-frames:v", "1", "-q:v", "2",
-        output_path,
+        "-frames:v", "1", "-q:v", "2", output_path,
     ]
-
     result = subprocess.run(cmd, capture_output=True, text=True)
-
     if os.path.exists(frame_path):
         os.remove(frame_path)
-
     if result.returncode == 0 and os.path.exists(output_path):
         return output_path
-
-    print(f"Thumbnail generate nahi hua: {result.stderr[-300:]}")
     return None
 
 
 def run_pipeline(channel: dict) -> bool:
-    """
-    Poora pipeline (single channel):
-    fresh script -> voiceover -> clips -> compose -> thumbnail -> upload.
-    """
     name = channel["name"]
     print(f"\n{'='*60}")
     print(f"  Starting pipeline for {name}")
@@ -327,7 +236,6 @@ def run_pipeline(channel: dict) -> bool:
 
     start_time = time.time()
 
-    # ---------- 1. Fresh script (unique per channel) ----------
     print(f"\n[{name}] Generating fresh script...")
     script = generate_script(client, USED_TOPICS_FILE)
     if not script:
@@ -341,7 +249,6 @@ def run_pipeline(channel: dict) -> bool:
     full_narration = " ".join(s["narration"] for s in scenes)
     print(f"[{name}] {len(scenes)} scenes | Hook: {scenes[0]['narration']}")
 
-    # ---------- 2. Voiceover ----------
     print(f"\n[{name}] Generating voiceovers...")
     try:
         voice_paths = build_scene_voiceovers(scenes, ch_audio_dir)
@@ -351,7 +258,6 @@ def run_pipeline(channel: dict) -> bool:
         notify_telegram(msg)
         return False
 
-    # ---------- 3. Stock clips ----------
     print(f"\n[{name}] Downloading stock clips...")
     try:
         clip_paths = build_scene_clips(scenes, ch_clip_dir)
@@ -361,7 +267,6 @@ def run_pipeline(channel: dict) -> bool:
         notify_telegram(msg)
         return False
 
-    # ---------- 4. Compose ----------
     print(f"\n[{name}] Composing final video...")
     composer = ShortsComposer(output_dir=ch_output_dir)
 
@@ -374,11 +279,9 @@ def run_pipeline(channel: dict) -> bool:
             files = [f for f in os.listdir(candidate) if f.lower().endswith(".mp3")]
             if files:
                 bg_music_path = os.path.join(candidate, random.choice(files))
-                print(f"[{name}] BG music: {bg_music_path}")
                 break
         elif os.path.isfile(candidate):
             bg_music_path = candidate
-            print(f"[{name}] BG music: {bg_music_path}")
             break
 
     if WORD_CAPTIONS:
@@ -416,12 +319,10 @@ def run_pipeline(channel: dict) -> bool:
         notify_telegram(msg)
         return False
 
-    # ---------- 5. Thumbnail ----------
     print(f"\n[{name}] Generating thumbnail...")
     thumb_path = os.path.join(ch_output_dir, "thumbnail.jpg")
     generate_thumbnail(final_video_path, thumb_path, script.get("title", "Amazing Fact"))
 
-    # ---------- 6. Upload to YouTube ----------
     print(f"\n[{name}] Uploading to YouTube...")
     title, description, tags = build_metadata(script, full_narration)
     print(f"[{name}] Title: {title}")
@@ -441,42 +342,29 @@ def run_pipeline(channel: dict) -> bool:
         print(f"https://youtube.com/shorts/{video_id}")
 
         if os.path.exists(thumb_path):
-            print(f"[{name}] Setting thumbnail...")
             set_thumbnail(
-                video_id,
-                thumb_path,
-                channel["client_id"],
-                channel["client_secret"],
-                channel["refresh_token"],
+                video_id, thumb_path,
+                channel["client_id"], channel["client_secret"], channel["refresh_token"],
             )
 
         if channel["playlist_id"]:
-            print(f"[{name}] Adding to playlist...")
             add_to_playlist(
-                video_id,
-                channel["playlist_id"],
-                channel["client_id"],
-                channel["client_secret"],
-                channel["refresh_token"],
+                video_id, channel["playlist_id"],
+                channel["client_id"], channel["client_secret"], channel["refresh_token"],
             )
 
         elapsed = time.time() - start_time
         notify_telegram(
-            f"[{name}] Video uploaded!\n"
-            f"{title}\n"
-            f"https://youtube.com/shorts/{video_id}\n"
-            f"{elapsed:.0f}s"
+            f"[{name}] Video uploaded!\n{title}\n"
+            f"https://youtube.com/shorts/{video_id}\n{elapsed:.0f}s"
         )
-
     except Exception as e:
         msg = f"[{name}] YouTube Upload Failed: {e}"
         print(msg)
         notify_telegram(msg)
         return False
 
-    # ---------- 7. TikTok (optional - only if credentials are set) ----------
     if TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET and TIKTOK_REFRESH_TOKEN:
-        print(f"\n[{name}] Uploading to TikTok (draft)...")
         try:
             tiktok_publish_id = upload_to_tiktok(
                 video_path=final_video_path,
@@ -485,20 +373,14 @@ def run_pipeline(channel: dict) -> bool:
                 client_secret=TIKTOK_CLIENT_SECRET,
                 refresh_token=TIKTOK_REFRESH_TOKEN,
             )
-            print(f"[{name}] TikTok upload complete! Publish ID: {tiktok_publish_id}")
-
             notify_telegram(
-                f"[{name}] TikTok draft uploaded!\n"
-                f"{title}\n"
-                f"Publish ID: {tiktok_publish_id}\n"
-                f"Open TikTok app to post manually"
+                f"[{name}] TikTok draft uploaded!\n{title}\n"
+                f"Publish ID: {tiktok_publish_id}"
             )
         except Exception as e:
-            msg = f"[{name}] TikTok Upload Failed: {e}"
-            print(msg)
-            notify_telegram(msg)
+            print(f"[{name}] TikTok Upload Failed: {e}")
     else:
-        print(f"\n[{name}] TikTok credentials missing - skipping TikTok upload.")
+        print(f"\n[{name}] TikTok credentials missing - skipping.")
 
     elapsed = time.time() - start_time
     print(f"\n[{name}] Pipeline complete in {elapsed:.0f}s")
@@ -508,20 +390,17 @@ def run_pipeline(channel: dict) -> bool:
 def main():
     print("Starting Automated Short Pipeline (single channel, English)...")
     channel = get_youtube_channel()
-
     if not (channel["client_id"] and channel["client_secret"] and channel["refresh_token"]):
-        msg = "YouTube credentials missing (YOUTUBE_CLIENT_ID / _CLIENT_SECRET / _REFRESH_TOKEN)."
+        msg = "YouTube credentials missing."
         print(msg)
         notify_telegram(msg)
         raise SystemExit(1)
-
     try:
         ok = run_pipeline(channel)
     except Exception as e:
         print(f"Pipeline crashed: {e}")
         notify_telegram(f"Pipeline crashed: {e}")
         ok = False
-
     print("\n" + "=" * 60)
     print("  " + ("SUCCESS" if ok else "FAILED"))
     print("=" * 60)
