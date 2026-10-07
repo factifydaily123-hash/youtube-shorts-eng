@@ -30,8 +30,8 @@ MODELS = [
 ]
 _DEAD_MODELS = set()
 
-MIN_SCENES = 8
-MAX_SCENES = 11
+MIN_SCENES = 6
+MAX_SCENES = 9
 HISTORY_KEY = "_recent"
 HISTORY_LIMIT = 120
 
@@ -236,7 +236,7 @@ def normalize_and_validate(data):
             problems.append(f"scene {i} has non-English script")
         if not _LATIN.search(sc["narration"]):
             problems.append(f"scene {i} has no English words")
-        if len(words) > 16:
+        if len(words) > 13:
             problems.append(f"scene {i} too long ({len(words)} words)")
         if not sc["search_keyword"]:
             problems.append(f"scene {i} missing search_keyword")
@@ -250,8 +250,8 @@ def normalize_and_validate(data):
         problems.append("hook longer than 7 words")
 
     total_words = sum(len(s["narration"].split()) for s in scenes)
-    if scenes and not (70 <= total_words <= 110):
-        problems.append(f"total words {total_words} outside 70-110")
+    if scenes and not (55 <= total_words <= 82):
+        problems.append(f"total words {total_words} outside 55-82")
 
     if len(scenes) >= 3:
         hook_words = set(re.findall(r"[a-z]{4,}", scenes[0]["narration"].lower()))
@@ -337,10 +337,10 @@ LANGUAGE
 ============================================================
 - Natural spoken American English. SUPER EASY words, 10-year-old level.
 - Plain text only: no emojis, hashtags, symbols inside narration.
-- Each scene = EXACTLY ONE short sentence, 6-12 words.
+- Each scene = EXACTLY ONE short sentence, 6-11 words.
 
 ============================================================
-STRUCTURE (8 to 11 scenes, 80-100 words total)
+STRUCTURE (6 to 9 scenes, 60-78 words total = 25-30 second video)
 ============================================================
 1. HOOK (max 7 words). First 3 words = shock/question.
 2. One line of context. Zero filler.
@@ -414,8 +414,8 @@ Return the FINAL JSON in the exact same schema.
 CHECKLIST
 1. Fact-check every claim. Replace wrong/exaggerated claims.
 2. Hook: MAX 7 words. First 3 words create shock/question.
-3. Every scene: one sentence, 6-12 words, natural spoken English.
-4. Each scene adds new info. Keep 8-11 scenes, 80-100 words total.
+3. Every scene: one sentence, 6-11 words, natural spoken English.
+4. Each scene adds new info. Keep 6-9 scenes, 60-78 words total (video MUST be 25-30 seconds, never longer).
 5. LAST SCENE = LOOP LINE that completes/answers the HOOK and shares at
    least one content word with it. NO 'follow for more'. NO CTA.
 6. Title: English, max 60 chars, one emoji, honest.
