@@ -366,8 +366,9 @@ class ShortsComposer:
             audio_codec="aac",
             audio_bitrate="192k",
             fps=30,
-            preset="medium",
-            ffmpeg_params=["-pix_fmt", "yuv420p", "-crf", "22"],
+            preset="ultrafast",
+            ffmpeg_params=["-pix_fmt", "yuv420p", "-crf", "23"],
+            threads=4,
             temp_audiofile=os.path.join(self.output_dir, "temp_audio.m4a"),
             remove_temp=True,
         )
@@ -435,6 +436,10 @@ class ShortsComposer:
 
             total_duration = timeline
             print(f"TOTAL TIMELINE: {total_duration:.2f}s")
+            if total_duration > 40:
+                raise RuntimeError(
+                    f"Timeline {total_duration:.0f}s too long for a Short "
+                    "(voiceover bug?) - aborting before slow render")
 
             # SAFETY CHECK: verify video_scenes sum matches total_duration
             scene_sum = sum(float(s.duration or 0) for s in video_scenes)
