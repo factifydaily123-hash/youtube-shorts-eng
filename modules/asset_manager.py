@@ -1,38 +1,20 @@
 """
-Stock-footage fetcher with STRICT keyword discipline.
-
-Problem ye tha: purana fallback 'scene keyword na mile to random
-PEXELS_SEARCH_TERMS se koi bhi clip utha lo' karta tha. Isse clips
-narration se mismatch ho jaati thi (brain ki baat ho rahi ho, aur
-screen par mountain aa jaaye).
-
-New behaviour:
-  - Fallback HIERARCHICAL hai aur THEME ke andar rehta hai:
-    1. Exact keyword
-    2. Same keyword ka shortened version (last 2 words, phir first 2)
-    3. KEYWORD_SYNONYMS se same-theme keyword
-    4. CATEGORY_SAFE_FALLBACKS se same-category safe keyword
-    5. (Bahut last resort) GENERIC_SAFE_FALLBACK + loud warning
-  - Har clip validate hoti hai (ffprobe + ffmpeg decode).
+Stock-footage fetcher with STRICT keyword discipline + scene-aware fallback.
 """
 
 import os
 import random
+import re
 import subprocess
 import shutil
 import requests
 
-
-# Ek run mein same clip id dobara use nahi hogi
 _USED_IDS = set()
 
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
 PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY")
 
 
-# ---------------------------------------------------------------------
-# THEME-ANCHORED FALLBACKS
-# ---------------------------------------------------------------------
 KEYWORD_SYNONYMS = {
     "brain": ["human brain animation", "head closeup person", "person thinking"],
     "neuron": ["neurons firing", "human brain animation", "microscope cells"],
@@ -155,9 +137,36 @@ CATEGORY_SAFE_FALLBACKS = {
 GENERIC_SAFE_FALLBACK = "abstract background dark"
 
 
-# ---------------------------------------------------------------------
-# Validation + normalisation
-# ---------------------------------------------------------------------
+# ---- NEW: scene-aware keyword from narration ----
+_NARRATION_STOPWORDS = {
+    "the","a","an","is","are","was","were","of","to","in","on","at","and","or",
+    "but","it","its","this","that","for","with","as","by","you","your","i","we",
+    "they","he","she","has","have","had","do","does","did","be","been","will",
+    "would","can","could","should","may","might","not","no","so","if","when",
+    "than","then","there","their","them","us","our","my","me","just","very",
+    "really","only","even","also","ever","never","every","each","more","most",
+    "some","any","all","one","two","three","about","around","like","feel",
+    "feels","felt","makes","make","made","gets","get","got","goes","went","come",
+    "comes","came","see","sees","saw","seen","know","knows","knew","think",
+    "thinks","thought","because","while","during","after","before","between",
+    "through","against","into","over","under","above","below","here","where",
+    "what","which","who","whom","whose","why","how",
+}
+
+
+def _extract_sentence_keyword(narration):
+    """Pick the most concrete noun-phrase from a narration sentence."""
+    words = re.findall(r"[a-zA-Z]+", (narration or "").lower())
+    content = [w for w in words if w not in _NARRATION_STOPWORDS and len(w) > 3]
+    if not content:
+        return ""
+    for w in content:
+        if w in KEYWORD_SYNONYMS:
+            return KEYWORD_SYNONYMS[w][0]
+    content.sort(key=len, reverse=True)
+    return " ".join(content[:2])
+
+
 def validate_video(video_path):
     if not os.path.exists(video_path):
         return False
@@ -165,21 +174,17 @@ def validate_video(video_path):
         return False
     try:
         probe = subprocess.run(
-            [
-                "ffprobe", "-v", "error",
-                "-select_streams", "v:0",
-                "-show_entries", "stream=codec_name,width,height",
-                "-of", "default=noprint_wrappers=1",
-                video_path
-            ],
-            capture_output=True, text=True, timeout=30
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=codec_name,width,height",
+             "-of", "default=noprint_wrappers=1", video_path],
+            capture_output=True, text=True, timeout=30,
         )
         if probe.returncode != 0 or not probe.stdout.strip():
             return False
         decode = subprocess.run(
             ["ffmpeg", "-v", "error", "-i", video_path,
              "-frames:v", "1", "-f", "null", "-"],
-            capture_output=True, text=True, timeout=30
+            capture_output=True, text=True, timeout=30,
         )
         return decode.returncode == 0
     except Exception:
@@ -188,64 +193,47 @@ def validate_video(video_path):
 
 def normalize_video(source_path, target_path):
     temp_output = target_path + ".normalized.mp4"
-
     if os.path.exists(temp_output):
         os.remove(temp_output)
-
     command = [
-        "ffmpeg", "-y",
-        "-i", source_path,
-        "-map", "0:v:0",
-        "-an",
+        "ffmpeg", "-y", "-i", source_path,
+        "-map", "0:v:0", "-an",
         "-vf", "scale='min(1080,iw)':-2",
-        "-c:v", "libx264",
-        "-preset", "fast",
-        "-crf", "23",
-        "-pix_fmt", "yuv420p",
-        "-movflags", "+faststart",
-        temp_output
+        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+        "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+        temp_output,
     ]
-
     result = subprocess.run(command, capture_output=True, text=True, timeout=180)
-
     if result.returncode != 0:
         raise RuntimeError("FFmpeg video normalization failed:\n" + result.stderr[-1500:])
-
     if not validate_video(temp_output):
         if os.path.exists(temp_output):
             os.remove(temp_output)
         raise RuntimeError("Normalized video is still invalid.")
-
     if os.path.exists(target_path):
         os.remove(target_path)
-
     shutil.move(temp_output, target_path)
     return target_path
 
 
 def download_file(url, target_path, extra_headers=None, asset_type="video"):
     temp_path = target_path + ".download"
-
     if os.path.exists(temp_path):
         os.remove(temp_path)
-
     print(f"Downloading asset: {target_path}...")
-
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                       "AppleWebKit/537.36 (KHTML, like Gecko) "
                       "Chrome/124.0 Safari/537.36",
-        "Accept": "*/*"
+        "Accept": "*/*",
     }
     if extra_headers:
         headers.update(extra_headers)
-
     try:
         with requests.get(url, stream=True, headers=headers,
                           timeout=(20, 180), allow_redirects=True) as response:
             response.raise_for_status()
             content_type = response.headers.get("Content-Type", "").lower()
-
             if asset_type == "video":
                 if "video" not in content_type and "octet-stream" not in content_type:
                     raise ValueError(f"Unexpected video content type: {content_type}")
@@ -253,28 +241,21 @@ def download_file(url, target_path, extra_headers=None, asset_type="video"):
                 if ("audio" not in content_type and "octet-stream" not in content_type
                         and "mpeg" not in content_type and "ogg" not in content_type):
                     print(f"Warning: Unexpected audio content type: {content_type}")
-
             with open(temp_path, "wb") as file:
                 for chunk in response.iter_content(chunk_size=1024 * 1024):
                     if chunk:
                         file.write(chunk)
-
         if not os.path.exists(temp_path):
             raise RuntimeError("Downloaded file was not created.")
-
         min_size = 2000 if asset_type == "audio" else 50000
         if os.path.getsize(temp_path) < min_size:
             raise ValueError(f"Downloaded file is too small ({os.path.getsize(temp_path)} bytes)")
-
         if asset_type == "video" and not validate_video(temp_path):
             raise ValueError("Downloaded MP4 is corrupt or cannot be decoded.")
-
         if os.path.exists(target_path):
             os.remove(target_path)
-
         shutil.move(temp_path, target_path)
         return target_path
-
     except Exception as error:
         if os.path.exists(temp_path):
             os.remove(temp_path)
@@ -283,44 +264,26 @@ def download_file(url, target_path, extra_headers=None, asset_type="video"):
         raise RuntimeError(f"Asset download failed ({target_path}): {error}") from error
 
 
-# ---------------------------------------------------------------------
-# KEYWORD QUERY BUILDER (theme-anchored, no random drift)
-# ---------------------------------------------------------------------
 def _theme_fallbacks(keyword):
-    """
-    Given a scene keyword, return an ordered list of fallback queries that
-    STAY ON THE SAME THEME. Never returns unrelated random clips.
-    """
     kw = (keyword or "").lower().strip()
     words = kw.split()
-
     fallbacks = []
-
-    # 1) Shortened versions of the SAME keyword
     if len(words) > 2:
-        fallbacks.append(" ".join(words[-2:]))   # last 2 words
-        fallbacks.append(" ".join(words[:2]))    # first 2 words
+        fallbacks.append(" ".join(words[-2:]))
+        fallbacks.append(" ".join(words[:2]))
     if len(words) > 1:
-        fallbacks.append(words[0])               # strongest single word
+        fallbacks.append(words[0])
         fallbacks.append(words[-1])
-
-    # 2) Synonym list for every word in the keyword
     for w in words:
         for syn in KEYWORD_SYNONYMS.get(w, []):
             if syn not in fallbacks:
                 fallbacks.append(syn)
-
-    # 3) Any category-level safe keyword that shares a word with the keyword
     for cat, items in CATEGORY_SAFE_FALLBACKS.items():
         if any(w in cat or w in " ".join(items) for w in words):
             for item in items:
                 if item not in fallbacks:
                     fallbacks.append(item)
-
-    # 4) Final safety net (only if everything else failed)
     fallbacks.append(GENERIC_SAFE_FALLBACK)
-
-    # Deduplicate, keep order
     seen = set()
     ordered = []
     for f in fallbacks:
@@ -330,33 +293,19 @@ def _theme_fallbacks(keyword):
     return ordered
 
 
-# ---------------------------------------------------------------------
-# Pexels
-# ---------------------------------------------------------------------
 def fetch_pexels_clip(keyword, target_path, min_duration=3):
     if validate_video(target_path):
         return target_path
-
     if os.path.exists(target_path):
         os.remove(target_path)
-
     if not PEXELS_API_KEY:
         raise RuntimeError("PEXELS_API_KEY set nahi hai.")
-
     headers = {"Authorization": PEXELS_API_KEY}
     search_url = "https://api.pexels.com/videos/search"
-
     queries_to_try = _theme_fallbacks(keyword)
-
     for query in queries_to_try:
         print(f"Searching Pexels for '{query}'...")
-
-        params = {
-            "query": query,
-            "orientation": "portrait",
-            "per_page": 30
-        }
-
+        params = {"query": query, "orientation": "portrait", "per_page": 30}
         try:
             response = requests.get(search_url, headers=headers, params=params, timeout=30)
             response.raise_for_status()
@@ -364,72 +313,50 @@ def fetch_pexels_clip(keyword, target_path, min_duration=3):
         except Exception as e:
             print(f"Pexels request failed for '{query}': {e}")
             continue
-
         videos = [
             v for v in data.get("videos", [])
             if v.get("duration", 0) >= min_duration
             and v.get("id") not in _USED_IDS
         ]
-
         if not videos:
             continue
-
-        # Shuffle only the top 10 so results stay relevant but not always identical
         videos = videos[:10]
         random.shuffle(videos)
-
         for video in videos:
-            files = [
-                f for f in video.get("video_files", [])
-                if f.get("file_type") == "video/mp4"
-            ]
+            files = [f for f in video.get("video_files", []) if f.get("file_type") == "video/mp4"]
             if not files:
                 continue
-
             files.sort(key=lambda f: abs((f.get("width", 1080) or 1080) - 1080))
-
             for f in files:
                 raw_path = target_path + ".raw.mp4"
                 try:
                     if os.path.exists(raw_path):
                         os.remove(raw_path)
-
                     download_file(f["link"], raw_path, asset_type="video")
                     normalize_video(raw_path, target_path)
-
                     if os.path.exists(raw_path):
                         os.remove(raw_path)
-
                     _USED_IDS.add(video.get("id"))
                     print(f"Valid Pexels clip ready: {target_path}")
                     return target_path
-
                 except Exception as error:
-                    print(f"Pexels clip failed, trying another clip: {error}")
+                    print(f"Pexels clip failed: {error}")
                     if os.path.exists(raw_path):
                         os.remove(raw_path)
                     if os.path.exists(target_path):
                         os.remove(target_path)
-
     raise RuntimeError(f"No valid Pexels video found for '{keyword}'.")
 
 
-# ---------------------------------------------------------------------
-# Pixabay
-# ---------------------------------------------------------------------
 def fetch_pixabay_clip(keyword, target_path):
     if validate_video(target_path):
         return target_path
-
     if os.path.exists(target_path):
         os.remove(target_path)
-
     if not PIXABAY_API_KEY:
         raise RuntimeError("PIXABAY_API_KEY set nahi hai.")
-
     queries_to_try = _theme_fallbacks(keyword)
     hits = []
-
     for query in queries_to_try:
         url = (
             "https://pixabay.com/api/videos/"
@@ -444,18 +371,14 @@ def fetch_pixabay_clip(keyword, target_path):
         except Exception as e:
             print(f"Pixabay request failed for '{query}': {e}")
             hits = []
-
         if hits:
             break
-
     if not hits:
         raise RuntimeError(f"No Pixabay video found for '{keyword}'.")
-
     hits = [h for h in hits if h.get("id") not in _USED_IDS] or hits
     hits = hits[:10]
     random.shuffle(hits)
     last_error = None
-
     for hit in hits:
         try:
             videos = hit.get("videos", {})
@@ -466,164 +389,123 @@ def fetch_pixabay_clip(keyword, target_path):
             )
             if not video_url:
                 continue
-
             raw_path = target_path + ".raw.mp4"
             download_file(video_url, raw_path, asset_type="video")
             normalize_video(raw_path, target_path)
-
             if os.path.exists(raw_path):
                 os.remove(raw_path)
-
             _USED_IDS.add(hit.get("id"))
             return target_path
-
         except Exception as error:
             last_error = error
             raw_path = target_path + ".raw.mp4"
             if os.path.exists(raw_path):
                 os.remove(raw_path)
-
     raise RuntimeError(f"All Pixabay clips failed for '{keyword}': {last_error}")
 
 
-# ---------------------------------------------------------------------
-# AI fallback (very last resort)
-# ---------------------------------------------------------------------
 def fetch_fallback_ai_clip(keyword, target_path, duration=6):
     if os.path.exists(target_path):
         os.remove(target_path)
-
     img_prompt = requests.utils.quote(f"{keyword}, cinematic background, vertical 9:16")
     img_url = (
         "https://image.pollinations.ai/prompt/"
-        f"{img_prompt}"
-        "?width=1080"
-        "&height=1920"
-        "&nologo=true"
+        f"{img_prompt}?width=1080&height=1920&nologo=true"
     )
-
     img_file = target_path + ".jpg"
     try:
         response = requests.get(img_url, timeout=90)
         response.raise_for_status()
-
         with open(img_file, "wb") as file:
             file.write(response.content)
-
         command = [
-            "ffmpeg", "-y",
-            "-loop", "1",
-            "-i", img_file,
-            "-vf",
-            "scale=1080:1920:"
-            "force_original_aspect_ratio=increase,"
-            "crop=1080:1920,"
-            "zoompan="
-            "z='min(zoom+0.0008,1.15)':"
-            "d=150:"
-            "s=1080x1920:"
-            "fps=30",
+            "ffmpeg", "-y", "-loop", "1", "-i", img_file,
+            "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,"
+                   "crop=1080:1920,"
+                   "zoompan=z='min(zoom+0.0008,1.15)':d=150:s=1080x1920:fps=30",
             "-t", str(max(duration, 5)),
-            "-c:v", "libx264",
-            "-preset", "medium",
-            "-crf", "20",
-            "-pix_fmt", "yuv420p",
-            "-movflags", "+faststart",
-            "-an",
-            target_path
+            "-c:v", "libx264", "-preset", "medium", "-crf", "20",
+            "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an",
+            target_path,
         ]
-
-        result = subprocess.run(command, check=False, capture_output=True,
-                                text=True, timeout=180)
-
+        result = subprocess.run(command, check=False, capture_output=True, text=True, timeout=180)
         if os.path.exists(img_file):
             os.remove(img_file)
-
         if result.returncode != 0:
             raise RuntimeError("AI fallback FFmpeg failed:\n" + result.stderr[-1500:])
-
         if not validate_video(target_path):
             raise RuntimeError("AI fallback generated an invalid video.")
-
         return target_path
-
     except Exception:
         if os.path.exists(img_file):
             os.remove(img_file)
         raise
 
 
-# ---------------------------------------------------------------------
-# PUBLIC API — main.py yeh import karta hai
-# ---------------------------------------------------------------------
-def fetch_scene_video(keyword, target_path, min_duration=3):
+def fetch_scene_video(keyword, target_path, min_duration=3, narration=""):
     """
-    Main entry point. Order:
-      Pexels (theme-anchored) -> Pixabay (theme-anchored) -> AI fallback.
-    Har fallback THEME ke andar rehta hai, isliye clip narration se match karti hai.
+    Main entry. Order:
+      1) keyword -> Pexels
+      2) narration-derived keyword -> Pexels
+      3) keyword -> Pixabay
+      4) AI fallback
     """
     if validate_video(target_path):
         return target_path
-
     if os.path.exists(target_path):
         os.remove(target_path)
 
     errors = []
 
-    # 1) Pexels
     try:
         return fetch_pexels_clip(keyword, target_path, min_duration=min_duration)
-    except Exception as error:
-        errors.append(f"Pexels: {error}")
+    except Exception as e:
+        errors.append(f"Pexels('{keyword}'): {e}")
         if os.path.exists(target_path):
             os.remove(target_path)
 
-    # 2) Pixabay
+    derived = _extract_sentence_keyword(narration) if narration else ""
+    if derived and derived != keyword:
+        print(f"Retrying Pexels with narration-derived keyword: '{derived}'")
+        try:
+            return fetch_pexels_clip(derived, target_path, min_duration=min_duration)
+        except Exception as e:
+            errors.append(f"Pexels(derived '{derived}'): {e}")
+            if os.path.exists(target_path):
+                os.remove(target_path)
+
     try:
         return fetch_pixabay_clip(keyword, target_path)
-    except Exception as error:
-        errors.append(f"Pixabay: {error}")
+    except Exception as e:
+        errors.append(f"Pixabay: {e}")
         if os.path.exists(target_path):
             os.remove(target_path)
 
-    # 3) AI-generated image -> zoompan video (still on-theme because we pass
-    #    the SAME keyword to the image generator)
     try:
         return fetch_fallback_ai_clip(keyword, target_path, duration=max(min_duration, 4))
-    except Exception as error:
-        errors.append(f"AI fallback: {error}")
+    except Exception as e:
+        errors.append(f"AI fallback: {e}")
 
-    raise RuntimeError(
-        f"'{keyword}' ke liye koi valid visual nahi mil saka:\n" + "\n".join(errors)
-    )
+    raise RuntimeError(f"'{keyword}' -> no visual found:\n" + "\n".join(errors))
 
 
 def fetch_scene_clips(scenes, scene_durations, output_dir="assets/scene_clips"):
-    """
-    Optional helper: agar kabhi kisi ko parallel/batch download chahiye.
-    main.py currently ek-ek scene ke liye fetch_scene_video() direct call karta hai.
-    """
     os.makedirs(output_dir, exist_ok=True)
     paths = []
-
     for index, (scene, duration) in enumerate(zip(scenes, scene_durations)):
         target_path = os.path.join(output_dir, f"scene_{index}.mp4")
-
         keyword = (
             scene.get("search_keyword", "").strip()
             or scene.get("visual_keyword", "").strip()
             or GENERIC_SAFE_FALLBACK
         )
-
         print(f"\nFetching scene {index + 1}: {keyword}")
-
-        fetch_scene_video(keyword, target_path, min_duration=max(2, int(duration)))
-
+        fetch_scene_video(
+            keyword, target_path,
+            min_duration=max(2, int(duration)),
+            narration=scene.get("narration", ""),
+        )
         if not validate_video(target_path):
-            raise RuntimeError(
-                f"Scene {index + 1} video is invalid after all fallbacks: {target_path}"
-            )
-
+            raise RuntimeError(f"Scene {index + 1} video invalid: {target_path}")
         paths.append(target_path)
-
     return paths
