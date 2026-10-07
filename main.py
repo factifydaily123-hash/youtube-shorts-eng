@@ -93,19 +93,36 @@ def notify_telegram(message: str):
 
 
 def build_scene_voiceovers(scenes, audio_dir):
+    """
+    Per-scene prosody curve — har scene ka apna energy level.
+
+    HOOK    : +18% rate, +3Hz  pitch -> excitement burst, "shock" feel
+    CONTEXT : +16% rate, +1Hz  pitch -> still fast, still engaged
+    BODY    : +15% rate,  0Hz  pitch -> consistent narrator speed
+    TWIST   : +8%  rate, -3Hz  pitch -> slow + low = gravity, weight
+    LOOP    : +12% rate,  0Hz  pitch -> medium close, ties back
+
+    Ye curve hi voice ko "ElevenLabs jaisa dynamic" banata hai —
+    ek hi monotone voice se alag-alag emotional scenes nikalte hain.
+    """
     paths = []
+    total = len(scenes)
     for index, scene in enumerate(scenes, start=1):
         path = os.path.join(audio_dir, f"scene_{index:02d}.mp3")
         if os.path.exists(path):
             os.remove(path)
+
         if index == 1:
-            rate, pitch = "+15%", "-3Hz"      # hook: fast and punchy
-        elif index == len(scenes) - 1 and len(scenes) > 4:
-            rate, pitch = "+5%", "-3Hz"        # loop line: slightly slower, closer
-        elif index == len(scenes):
-            rate, pitch = "+10%", "+0Hz"
+            rate, pitch = "+18%", "+3Hz"      # HOOK — excitement
+        elif index == 2:
+            rate, pitch = "+16%", "+1Hz"      # CONTEXT — engaged
+        elif index == total - 1:
+            rate, pitch = "+8%", "-3Hz"       # TWIST — gravity
+        elif index == total:
+            rate, pitch = "+12%", "+0Hz"      # LOOP — medium
         else:
-            rate, pitch = None, None
+            rate, pitch = "+15%", "+0Hz"      # BODY — consistent
+
         for attempt in range(1, 4):
             try:
                 generate_voiceover(scene["narration"], path, rate=rate, pitch=pitch)
