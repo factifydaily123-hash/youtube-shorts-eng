@@ -2,10 +2,36 @@ name: Auto Generate and Post YouTube Shorts
 
 on:
   schedule:
-    # Base times (US prime-time ET). Actual post = base + random 15-45 min delay.
-    - cron: '0 15 * * *'   # ~11:00 AM ET
-    - cron: '0 19 * * *'   # ~3:00 PM ET
-    - cron: '0 23 * * *'   # ~7:00 PM ET
+    # 3 uploads/day, but times vary by weekday (real-human pattern)
+    # Har din alag minute + alag hour offset — bot detection avoid
+
+    # MORNING (US ET ~11-12 PM)
+    - cron: '4 15 * * 1'    # Mon ~11:04 AM ET
+    - cron: '12 15 * * 2'   # Tue ~11:12 AM ET
+    - cron: '7 15 * * 3'    # Wed ~11:07 AM ET
+    - cron: '19 15 * * 4'   # Thu ~11:19 AM ET
+    - cron: '33 15 * * 5'   # Fri ~11:33 AM ET
+    - cron: '8 16 * * 6'    # Sat ~12:08 PM ET
+    - cron: '44 16 * * 0'   # Sun ~12:44 PM ET
+
+    # AFTERNOON (US ET ~3-4 PM)
+    - cron: '21 19 * * 1'   # Mon ~3:21 PM ET
+    - cron: '37 19 * * 2'   # Tue ~3:37 PM ET
+    - cron: '9 19 * * 3'    # Wed ~3:09 PM ET
+    - cron: '18 19 * * 4'   # Thu ~3:18 PM ET
+    - cron: '43 19 * * 5'   # Fri ~3:43 PM ET
+    - cron: '26 20 * * 6'   # Sat ~4:26 PM ET
+    - cron: '11 20 * * 0'   # Sun ~4:11 PM ET
+
+    # EVENING (US ET ~7-8 PM)
+    - cron: '52 23 * * 1'   # Mon ~7:52 PM ET
+    - cron: '14 0 * * 2'    # Tue ~8:14 PM ET
+    - cron: '31 23 * * 3'   # Wed ~7:31 PM ET
+    - cron: '47 23 * * 4'   # Thu ~7:47 PM ET
+    - cron: '3 0 * * 5'     # Fri ~8:03 PM ET
+    - cron: '29 0 * * 6'    # Sat ~8:29 PM ET
+    - cron: '16 0 * * 0'    # Sun ~8:16 PM ET
+
   workflow_dispatch:
 
 permissions:
@@ -18,20 +44,13 @@ concurrency:
 jobs:
   build-and-run:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 60
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-
-    # Randomized anti-spam delay: 15-45 minutes
-    - name: Randomized upload delay (anti-spam)
-      run: |
-        DELAY=$(( (RANDOM % 1800) + 900 ))
-        echo "Waiting ${DELAY}s ($((DELAY/60)) min) before pipeline..."
-        sleep $DELAY
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -106,7 +125,7 @@ jobs:
         TTS_VOICE_FALLBACK2: 'en-US-GuyNeural'
         TTS_VOICE_FALLBACK3: 'en-GB-RyanNeural'
 
-        # Voice rate/pitch defaults (per-scene curve main.py se aata hai)
+        # Voice rate/pitch defaults
         TTS_RATE: '+15%'
         TTS_PITCH: '+0Hz'
       run: python main.py
