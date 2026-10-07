@@ -77,70 +77,48 @@ POWER_WORDS = {
 DRAMATIC_PAUSE_WORDS = {"but", "however", "except", "suddenly", "wait"}
 
 
-# ------------------------------------------------------------- SSML layer ----
-def _build_ssml(text, voice, rate, pitch):
+# ------------------------------------------------------------ text layer ----
+def _add_emphasis_commas(text):
     """
-    Wrap plain text in SSML with:
-      - 80ms break at start and end (click-free)
-      - emphasis commas before power words
-      - 60ms break before dramatic words (but/however/suddenly)
-      - 100ms break after exclamation/question marks (built into text)
-    """
-    # Escape for XML
-    esc = (text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+    Plain-text prosody helper (NO SSML).
 
-    # Add comma before power words (only if not already at sentence start)
-    tokens = re.findall(r"\S+", esc)
+    Comma before power words / dramatic words -> Edge-TTS naturally pauses.
+
+    IMPORTANT (bug fix): newer edge-tts versions (>=6.1.10 / 7.x) XML-escape the
+    text you pass to Communicate() and build the SSML themselves. Passing our own
+    <speak>...</speak> string made the engine READ THE TAGS ALOUD, so every scene
+    became ~60s long (554s timeline). Always pass plain text + rate/pitch args.
+    """
+    tokens = re.findall(r"\S+", text)
     out = []
     for i, tok in enumerate(tokens):
         clean = re.sub(r"[^\w']", "", tok).lower()
-        # comma before power word
         if (i > 0
-                and clean in POWER_WORDS
-                and not out[-1].endswith((",", ".", "!", "?", ";", ":"))):
-            out[-1] = out[-1] + ","
-        # comma before dramatic word (heavier pause)
-        if (i > 0
-                and clean in DRAMATIC_PAUSE_WORDS
+                and (clean in POWER_WORDS or clean in DRAMATIC_PAUSE_WORDS)
                 and not out[-1].endswith((",", ".", "!", "?", ";", ":"))):
             out[-1] = out[-1] + ","
         out.append(tok)
-    processed = " ".join(out)
-
-    # Wrap in SSML
-    ssml = (
-        f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" '
-        f'xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">'
-        f'<voice name="{voice}">'
-        f'<mstts:express-as style="newscast-casual" styledegree="1.2">'
-        f'<prosody rate="{rate}" pitch="{pitch}" volume="{VOICE_VOLUME}">'
-        f'<break time="80ms"/>'
-        f'{processed}'
-        f'<break time="80ms"/>'
-        f'</prosody>'
-        f'</mstts:express-as>'
-        f'</voice>'
-        f'</speak>'
-    )
-    return ssml
+    return " ".join(out)
 
 
-async def _tts_async(text, output_path, voice, rate, pitch, use_ssml=True):
-    """Generate TTS. Tries SSML first (better prosody), falls back to plain."""
-    if use_ssml:
-        try:
-            ssml = _build_ssml(text, voice, rate, pitch)
-            communicate = edge_tts.Communicate(ssml, voice)
-            await communicate.save(output_path)
-            return
-        except Exception as e:
-            print(f"SSML failed for {voice}, falling back to plain: {e}")
-
-    # Plain fallback (no SSML)
+async def _tts_async(text, output_path, voice, rate, pitch):
+    """Generate TTS from PLAIN text (never raw SSML)."""
     communicate = edge_tts.Communicate(
-        text=text, voice=voice, rate=rate, pitch=pitch, volume=VOICE_VOLUME
+        text=_add_emphasis_commas(text),
+        voice=voice, rate=rate, pitch=pitch, volume=VOICE_VOLUME,
     )
     await communicate.save(output_path)
+
+
+def _audio_duration(path):
+    try:
+        r = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=nw=1:nk=1", path],
+            capture_output=True, text=True, timeout=30)
+        return float(r.stdout.strip())
+    except Exception:
+        return 0.0
 
 
 def _run(cmd, timeout=180):
@@ -199,11 +177,20 @@ def generate_voiceover(text, output_path, rate=None, pitch=None):
                     clean, output_path, voice,
                     rate or VOICE_RATE,
                     pitch or VOICE_PITCH,
-                    use_ssml=True,
                 ))
 
                 if os.path.exists(output_path) and os.path.getsize(output_path) > 1000:
                     _trim_silence(output_path)
+
+                    # SANITY CHECK: ~2.5 words/sec max at this speed, +4s slack.
+                    # If audio is far longer, the TTS read junk (e.g. markup).
+                    n_words = len(clean.split())
+                    max_ok = n_words / 2.0 + 4.0
+                    dur = _audio_duration(output_path)
+                    if dur > max_ok:
+                        raise RuntimeError(
+                            f"voiceover too long: {dur:.1f}s for {n_words} words "
+                            f"(max {max_ok:.1f}s)")
                     return output_path
 
                 raise RuntimeError("Edge TTS ne valid audio nahi di.")
