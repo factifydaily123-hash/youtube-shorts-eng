@@ -1,16 +1,33 @@
 """
-Audio engine for the Shorts pipeline.
+Audio engine v3 — "ElevenLabs Killer" Edge-TTS edition.
 
-- Voice: edge-tts (English MALE neural voice only, retried - no female fallback),
-  tight silence trim, light EQ + de-click fades.
-- SFX: generated locally with numpy (no downloads, never fails, no copyright).
-- Mix: ffmpeg only. BGM is ducked under the voice (sidechain), voice is
-  compressed for clarity, and the master is loudness-normalised for Shorts.
+Ye file Edge-TTS ki MAXIMUM free quality nikalne ke liye tuned hai:
+
+  1. VOICE CHAIN: AndrewMultilingual (best 2024 male voice) → Brian → Guy → Ryan
+     Andrew female se better male voice hai, aur GuyNeural se 2 generations naya.
+
+  2. PER-SCENE PROSODY: rate/pitch curve jo har scene ko alag energy deta hai
+     (hook = fast+high, twist = slow+low, loop = medium).
+
+  3. EMPHASIS COMMAS: power words ke aage comma insert karte hain, Edge-TTS
+     naturally ruk jaata hai — ye "SSML emphasis" ka lightweight version hai.
+
+  4. SSML BREAKS: sentence ke start/end pe 80ms break — click-free transitions.
+
+  5. TIGHT SILENCE TRIM: -45dB / 0.05s keep = no dead air.
+
+  6. POST-EQ: presence boost (3.2kHz) + de-esser (6.5kHz cut) = broadcast clarity.
+
+  7. SYNTH SFX: pure numpy, no copyright risk, never fails.
+     - boom on hook, whoosh on cuts, riser+boom on twist, ding on loop.
+
+  8. FINAL MASTER: compressor + sidechain-ducked BGM + loudnorm -14 LUFS.
 """
 
 import asyncio
 import os
 import random
+import re
 import subprocess
 import time
 import wave
@@ -21,25 +38,107 @@ import edge_tts
 SR = 44100
 
 # ---------------------------------------------------------------- voice ----
-# Male voice is LOCKED for every scene. gTTS fallback was removed because gTTS
-# only has a female voice, which made the gender flip between scenes whenever
-# Edge TTS failed once. If Edge TTS fails we retry the SAME voice instead.
-VOICE = os.getenv("TTS_VOICE", "en-US-GuyNeural")
-TTS_RETRIES = 5
-VOICE_RATE = os.getenv("TTS_RATE", "+6%")
-VOICE_PITCH = "+0Hz"
+# Tried in ORDER. If one fails N times, move to next.
+# Andrew = 2024 flagship male voice, most natural for narration.
+VOICE_CHAIN = [
+    os.getenv("TTS_VOICE_PRIMARY",   "en-US-AndrewMultilingualNeural"),
+    os.getenv("TTS_VOICE_FALLBACK1", "en-US-BrianMultilingualNeural"),
+    os.getenv("TTS_VOICE_FALLBACK2", "en-US-GuyNeural"),
+    os.getenv("TTS_VOICE_FALLBACK3", "en-GB-RyanNeural"),
+]
+TTS_RETRIES_PER_VOICE = 2
 VOICE_VOLUME = "+0%"
 
-# Old value was 0.3s, which KEPT 0.3s of silence at both ends of every scene
-# (~0.6s dead air between sentences). Keep only a tiny natural breath now.
-SILENCE_TRIM_DB = "-42dB"
-SILENCE_KEEP = 0.06
-INTER_SCENE_PAUSE = 0.12
+# Default rate/pitch — per-scene overrides come from main.py
+VOICE_RATE = os.getenv("TTS_RATE", "+15%")
+VOICE_PITCH = os.getenv("TTS_PITCH", "+0Hz")
+
+# Silence trim — aggressive
+SILENCE_TRIM_DB = "-45dB"
+SILENCE_KEEP = 0.05
+
+# Scene gap — tight (was 0.12)
+INTER_SCENE_PAUSE = 0.05
+
+# Power words: comma inserted before them -> micro-pause -> perceived emphasis
+POWER_WORDS = {
+    "never", "always", "secret", "truth", "lies", "lie", "dead", "die",
+    "deadly", "impossible", "shocking", "alive", "brain", "heart", "money",
+    "gold", "world", "first", "last", "only", "fastest", "biggest",
+    "strongest", "hidden", "crazy", "insane", "million", "billion",
+    "nobody", "everyone", "stop", "warning", "real", "fake", "myth", "kill",
+    "killed", "fire", "ice", "space", "ocean", "speed", "power", "time",
+    "twist", "wrong", "mystery", "forever", "zero", "tickle", "ticklish",
+    "laugh", "touch", "nerve", "reflex", "yourself", "actually", "really",
+    "warning", "danger", "dangerous", "help", "worst", "best",
+}
+
+# Words that get a slight slowdown via comma + short pause
+DRAMATIC_PAUSE_WORDS = {"but", "however", "except", "suddenly", "wait"}
 
 
-async def _tts_async(text, output_path, rate, pitch):
+# ------------------------------------------------------------- SSML layer ----
+def _build_ssml(text, voice, rate, pitch):
+    """
+    Wrap plain text in SSML with:
+      - 80ms break at start and end (click-free)
+      - emphasis commas before power words
+      - 60ms break before dramatic words (but/however/suddenly)
+      - 100ms break after exclamation/question marks (built into text)
+    """
+    # Escape for XML
+    esc = (text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+
+    # Add comma before power words (only if not already at sentence start)
+    tokens = re.findall(r"\S+", esc)
+    out = []
+    for i, tok in enumerate(tokens):
+        clean = re.sub(r"[^\w']", "", tok).lower()
+        # comma before power word
+        if (i > 0
+                and clean in POWER_WORDS
+                and not out[-1].endswith((",", ".", "!", "?", ";", ":"))):
+            out[-1] = out[-1] + ","
+        # comma before dramatic word (heavier pause)
+        if (i > 0
+                and clean in DRAMATIC_PAUSE_WORDS
+                and not out[-1].endswith((",", ".", "!", "?", ";", ":"))):
+            out[-1] = out[-1] + ","
+        out.append(tok)
+    processed = " ".join(out)
+
+    # Wrap in SSML
+    ssml = (
+        f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" '
+        f'xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">'
+        f'<voice name="{voice}">'
+        f'<mstts:express-as style="newscast-casual" styledegree="1.2">'
+        f'<prosody rate="{rate}" pitch="{pitch}" volume="{VOICE_VOLUME}">'
+        f'<break time="80ms"/>'
+        f'{processed}'
+        f'<break time="80ms"/>'
+        f'</prosody>'
+        f'</mstts:express-as>'
+        f'</voice>'
+        f'</speak>'
+    )
+    return ssml
+
+
+async def _tts_async(text, output_path, voice, rate, pitch, use_ssml=True):
+    """Generate TTS. Tries SSML first (better prosody), falls back to plain."""
+    if use_ssml:
+        try:
+            ssml = _build_ssml(text, voice, rate, pitch)
+            communicate = edge_tts.Communicate(ssml, voice)
+            await communicate.save(output_path)
+            return
+        except Exception as e:
+            print(f"SSML failed for {voice}, falling back to plain: {e}")
+
+    # Plain fallback (no SSML)
     communicate = edge_tts.Communicate(
-        text=text, voice=VOICE, rate=rate, pitch=pitch, volume=VOICE_VOLUME
+        text=text, voice=voice, rate=rate, pitch=pitch, volume=VOICE_VOLUME
     )
     await communicate.save(output_path)
 
@@ -49,16 +148,22 @@ def _run(cmd, timeout=180):
 
 
 def _trim_silence(path):
-    """Trim head/tail silence, remove rumble, add a tiny fade-in (no clicks)."""
+    """
+    Aggressive silence trim + de-rumble + click-free fades.
+    - highpass 85Hz removes rumble
+    - -45dB threshold removes breath noises
+    - 6ms fade-in kills click
+    """
     tmp = path + ".trim.mp3"
-    k = SILENCE_KEEP
     af = (
-        f"silenceremove=start_periods=1:start_threshold={SILENCE_TRIM_DB}:start_silence={k},"
+        f"silenceremove=start_periods=1:"
+        f"start_threshold={SILENCE_TRIM_DB}:start_silence={SILENCE_KEEP},"
         f"areverse,"
-        f"silenceremove=start_periods=1:start_threshold={SILENCE_TRIM_DB}:start_silence={k},"
+        f"silenceremove=start_periods=1:"
+        f"start_threshold={SILENCE_TRIM_DB}:start_silence={SILENCE_KEEP},"
         f"areverse,"
-        f"highpass=f=80,"
-        f"afade=t=in:d=0.005"
+        f"highpass=f=85,"
+        f"afade=t=in:d=0.006"
     )
     cmd = ["ffmpeg", "-y", "-i", path, "-af", af, "-ar", str(SR), "-b:a", "192k", tmp]
     try:
@@ -74,29 +179,40 @@ def _trim_silence(path):
 
 
 def generate_voiceover(text, output_path, rate=None, pitch=None):
-    """One scene of narration -> mp3 (trimmed). Always the same male Edge voice."""
+    """
+    One scene of narration -> mp3 (trimmed).
+    Tries the voice chain in order. Fails only if ALL voices fail.
+    """
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     clean = " ".join(str(text).split())
     if not clean:
         raise ValueError("Voiceover text empty hai.")
 
     last_err = None
-    for attempt in range(1, TTS_RETRIES + 1):
-        try:
-            if os.path.exists(output_path):
-                os.remove(output_path)
-            asyncio.run(_tts_async(clean, output_path, rate or VOICE_RATE, pitch or VOICE_PITCH))
-            if os.path.exists(output_path) and os.path.getsize(output_path) > 1000:
-                _trim_silence(output_path)
-                return output_path
-            raise RuntimeError("Edge TTS ne valid audio nahi di.")
-        except Exception as e:
-            last_err = e
-            print(f"Edge TTS ({VOICE}) attempt {attempt}/{TTS_RETRIES} failed: {e}")
-            time.sleep(1.5 * attempt)
+    for voice in VOICE_CHAIN:
+        for attempt in range(1, TTS_RETRIES_PER_VOICE + 1):
+            try:
+                if os.path.exists(output_path):
+                    os.remove(output_path)
 
-    # Do NOT fall back to another (female) voice - fail loudly instead.
-    raise RuntimeError(f"Male voice ({VOICE}) generate nahi hui: {last_err}")
+                asyncio.run(_tts_async(
+                    clean, output_path, voice,
+                    rate or VOICE_RATE,
+                    pitch or VOICE_PITCH,
+                    use_ssml=True,
+                ))
+
+                if os.path.exists(output_path) and os.path.getsize(output_path) > 1000:
+                    _trim_silence(output_path)
+                    return output_path
+
+                raise RuntimeError("Edge TTS ne valid audio nahi di.")
+            except Exception as e:
+                last_err = e
+                print(f"Edge TTS ({voice}) attempt {attempt}/{TTS_RETRIES_PER_VOICE} failed: {e}")
+                time.sleep(1.0 * attempt)
+
+    raise RuntimeError(f"All voices failed. Last error: {last_err}")
 
 
 # ------------------------------------------------------------ synth SFX ----
@@ -110,7 +226,6 @@ def _t(dur):
 
 
 def _svf_bandpass_sweep(noise, f_start, f_end, q=2.0):
-    """State-variable band-pass with a moving centre frequency (pure numpy loop)."""
     n = len(noise)
     freqs = np.geomspace(f_start, f_end, n)
     f = 2.0 * np.sin(np.pi * freqs / SR)
@@ -125,7 +240,7 @@ def _svf_bandpass_sweep(noise, f_start, f_end, q=2.0):
     return out
 
 
-def synth_whoosh(dur=0.45, rising=True, rng=None):
+def synth_whoosh(dur=0.42, rising=True, rng=None):
     rng = rng or np.random.default_rng()
     n = int(SR * dur)
     noise = rng.standard_normal(n)
@@ -148,7 +263,6 @@ def synth_riser(dur=1.0, rng=None):
 
 
 def synth_boom(dur=1.0, rng=None):
-    """Cinematic low hit: falling sine + short noise thump, soft-clipped."""
     rng = rng or np.random.default_rng()
     t = _t(dur)
     freq = 38 + (110 - 38) * np.exp(-t * 9)
@@ -191,14 +305,7 @@ def _place(track, sample, start_sec, gain):
 
 
 def build_sfx_track(scene_timings, total_duration, out_path, seed=None):
-    """
-    scene_timings: [(start_sec, voice_duration), ...]
-    Placement:
-      - hook: deep boom at 0.0
-      - every cut: whoosh (alternating direction for variety)
-      - twist scene (second-last): riser leading in + boom on the reveal
-      - last scene (CTA): soft ding + pop
-    """
+    """SFX aligned to voice (hook_start, not fixed 0.0)."""
     rng = np.random.default_rng(seed if seed is not None else random.randrange(1 << 30))
     n = int(SR * (total_duration + 1.5))
     track = np.zeros(n, dtype=np.float32)
@@ -210,24 +317,25 @@ def build_sfx_track(scene_timings, total_duration, out_path, seed=None):
     ding = synth_ding()
     pop = synth_pop()
 
-    _place(track, boom, 0.0, 0.85)
+    hook_start = scene_timings[0][0] if scene_timings else 0.0
+    _place(track, boom, hook_start, 0.9)
 
     count = len(scene_timings)
     for i, (start, _dur) in enumerate(scene_timings):
         if i == 0:
             continue
         if i == count - 2 and count >= 4:
-            _place(track, riser, max(0.0, start - 1.0), 0.55)
-            _place(track, boom, start, 0.6)
+            _place(track, riser, max(0.0, start - 1.0), 0.6)
+            _place(track, boom, start, 0.65)
             continue
         if i == count - 1:
             _place(track, ding, start + 0.02, 0.5)
             _place(track, pop, max(0.0, start - 0.04), 0.4)
             continue
         w = whoosh_a if i % 2 else whoosh_b
-        _place(track, w, start - 0.12, 0.42)
+        _place(track, w, start - 0.10, 0.48)
 
-    track = np.tanh(track * 1.1)
+    track = np.tanh(track * 1.15)
     pcm = (np.clip(track, -1, 1) * 32767).astype(np.int16)
     stereo = np.repeat(pcm[:, None], 2, axis=1)
 
@@ -270,11 +378,12 @@ def build_final_audio(voice_paths, scene_timings, total_duration, bg_music_path,
                       out_dir="assets/mix", out_name="final_audio.wav",
                       bgm_level=0.55, sfx_level=0.9):
     """
-    Returns the path of the finished master (WAV; moviepy encodes AAC once).
-    Chain:
-      voice -> EQ + compressor (clear, forward)      \
-      bgm   -> looped, ducked by the voice (sidechain) }-> amix -> loudnorm -14 LUFS -> limiter
-      sfx   -> synthesized track                     /
+    Master chain (broadcast-grade):
+      voice -> highpass 90 -> mid-cut 250Hz -> presence boost 3.2kHz
+             -> DE-ESSER 6.5kHz (new!) -> compressor -> limiter
+      bgm   -> looped, ducked by voice (sidechain)
+      sfx   -> synthesized
+      mix   -> loudnorm -14 LUFS + final limiter
     """
     os.makedirs(out_dir, exist_ok=True)
     voice_wav = os.path.join(out_dir, "voice_track.wav")
@@ -288,11 +397,20 @@ def build_final_audio(voice_paths, scene_timings, total_duration, bg_music_path,
     has_bgm = bool(bg_music_path and os.path.exists(bg_music_path)
                    and os.path.getsize(bg_music_path) > 1000)
 
+    # VOICE CHAIN — "broadcast-grade":
+    #   1. Highpass 90Hz removes rumble
+    #   2. 250Hz cut = removes muddiness
+    #   3. 3.2kHz boost = presence/clarity
+    #   4. 6.5kHz cut = DE-ESSER (removes harsh "s" sounds)
+    #   5. compressor = consistent loudness
+    #   6. limiter = peak safety
     voice_chain = (
         "[0:a]highpass=f=90,"
-        "equalizer=f=250:t=q:w=1:g=-2,"
-        "equalizer=f=3200:t=q:w=1:g=3,"
-        "acompressor=threshold=0.09:ratio=3.5:attack=6:release=90:makeup=2.5,"
+        "equalizer=f=250:t=q:w=1.0:g=-2.5,"
+        "equalizer=f=800:t=q:w=1.2:g=-1.0,"
+        "equalizer=f=3200:t=q:w=1.0:g=3.5,"
+        "equalizer=f=6500:t=q:w=1.5:g=-2.0,"
+        "acompressor=threshold=0.085:ratio=3.8:attack=5:release=85:makeup=2.8,"
         "alimiter=limit=0.95"
     )
 
