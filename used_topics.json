@@ -459,6 +459,30 @@
       "subject_key": "alcohol cook",
       "fact": "Alcohol does not completely cook out of food, with significant percentages remaining even after long cooking times, depending on factors like heat, surface area, and cooking duration.",
       "fingerprint": "significant completely disappear percentag actually duration evaporat favorite surprise alcohol believe imagine percent science surface around depend factor really remain"
+    },
+    {
+      "date": "2026-10-08T09:01:26",
+      "category": "deep ocean creatures and strange things under the sea",
+      "format": "myth_vs_truth",
+      "hook_style": "payoff_promise",
+      "loop_style": "mirror_loop",
+      "title": "Anglerfish Light Is FAKE?! 🤯 Deep Sea Secret",
+      "subject": "anglerfish",
+      "subject_key": "anglerfish",
+      "fact": "Deep-sea anglerfish lures glow due to bioluminescent bacteria living inside them, not the fish producing its own light.",
+      "fingerprint": "bioluminescent anglerfish unsuspect bacteria attract believe million inside itself produc secret creat dangl light weird deep fake fish glow lure"
+    },
+    {
+      "date": "2026-10-08T09:03:55",
+      "category": "food and cooking science (things you can watch sizzle, freeze, burn or rise)",
+      "format": "mystery_explained",
+      "hook_style": "direct_question",
+      "loop_style": "lead_in_loop",
+      "title": "Popcorn's Secret Explosion! 🍿",
+      "subject": "popcorn",
+      "subject_key": "popcorn",
+      "fact": "Popcorn kernels explode because superheated water inside them turns starch into an expanded gel when the shell cracks.",
+      "fingerprint": "explosion instantly superheat pressure suddenly explode immense popcorn science behind crunch expand inside kernel secret starch build crack shell water"
     }
   ]
 }
