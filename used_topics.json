@@ -483,6 +483,18 @@
       "subject_key": "popcorn",
       "fact": "Popcorn kernels explode because superheated water inside them turns starch into an expanded gel when the shell cracks.",
       "fingerprint": "explosion instantly superheat pressure suddenly explode immense popcorn science behind crunch expand inside kernel secret starch build crack shell water"
+    },
+    {
+      "date": "2026-10-08T15:57:49",
+      "category": "fire, ice, water and extreme temperatures",
+      "format": "shocking_fact",
+      "hook_style": "impossible_claim",
+      "loop_style": "answer_loop",
+      "title": "Boiling Water Instantly Turns To Snow 🤯",
+      "subject": "boiling water",
+      "subject_key": "boil water",
+      "fact": "Boiling water instantly freezes into a cloud of ice when thrown into extremely cold air (below -30°C/-22°F) due to rapid evaporation and sublimation.",
+      "fingerprint": "evaporation immediately sublimation incredibly evaporate extremely instantly droplet atomiz celsiu effect freeze thrown below cloud creat degre freez rapid shock"
     }
   ]
 }
