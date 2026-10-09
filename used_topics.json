@@ -495,6 +495,18 @@
       "subject_key": "boil water",
       "fact": "Boiling water instantly freezes into a cloud of ice when thrown into extremely cold air (below -30°C/-22°F) due to rapid evaporation and sublimation.",
       "fingerprint": "evaporation immediately sublimation incredibly evaporate extremely instantly droplet atomiz celsiu effect freeze thrown below cloud creat degre freez rapid shock"
+    },
+    {
+      "date": "2026-10-09T00:23:51",
+      "category": "ancient ruins, pyramids, temples and lost civilizations",
+      "format": "myth_vs_truth",
+      "hook_style": "you_scenario",
+      "loop_style": "lead_in_loop",
+      "title": "Pyramid Builders: Not What You Think 🤯",
+      "subject": "giza pyramids",
+      "subject_key": "giza pyramid",
+      "fact": "The ancient Egyptian pyramids of Giza were built by skilled, paid laborers and craftspeople, not slaves.",
+      "fingerprint": "craftspeople discovery actually egyptian ancient builder complex everyth exactly history laborer medical popular pyramid change family recent suffer worker build"
     }
   ]
 }
