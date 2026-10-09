@@ -1,14 +1,14 @@
 """
-Script engine (Gemini) - English edition, RETENTION + RELEVANCE optimized.
+Script engine (Gemini) - English edition, RETENTION + RELEVANCE optimized for PSYCHOLOGY FACTS.
 
 What is new in this version
 ---------------------------
 1. SUBJECT-ANCHORED VISUALS
-   The writer must return a precise `subject` (e.g. "barreleye fish") and a
-   `visual_domain` (e.g. ["deep sea fish", "underwater ocean"]). Every scene
+   The writer must return a precise `subject` (e.g. "human brain") and a
+   `visual_domain` (e.g. ["people talking", "person thinking"]). Every scene
    gets a `search_keyword` (what the camera shows) and a `fallback_keyword`
    (broader, but still the same world). asset_manager walks this ladder and
-   NEVER falls back to unrelated stock (girls, jets, random buildings).
+   NEVER falls back to unrelated stock (jets, random buildings).
 
 2. HOOK STYLE ROTATION  -> no more identical template every video.
    A hook style + loop style are picked per video and remembered in history.
@@ -57,69 +57,65 @@ HISTORY_KEY = "_recent"
 HISTORY_LIMIT = 300
 
 CATEGORIES = [
-    "your own body doing weird things (eyes, skin, blood, heartbeat, hands, tickle reflex)",
-    "dangerous or deadly animals and how their bodies work",
-    "deep ocean creatures and strange things under the sea",
-    "space spectacles (sun, moon, planets, black holes, astronauts)",
-    "extreme weather you can SEE (lightning, tornado, hail, snow, floods)",
-    "volcanoes, lava, earthquakes, sinkholes and the Earth's wild side",
-    "tiny creatures under a macro lens (ants, bees, spiders, butterflies)",
-    "animal survival tricks (camouflage, hibernation, speed, venom)",
-    "food and cooking science (things you can watch sizzle, freeze, burn or rise)",
-    "sleep, dreams and the brain in everyday life",
-    "deserts, mountains, caves, glaciers and extreme places",
-    "ancient ruins, pyramids, temples and lost civilizations",
-    "trees, flowers, plants and forests doing surprising things",
-    "fire, ice, water and extreme temperatures",
-    "megastructures, bridges, dams, trains and machines (how they really work)",
-    "sports and the limits of the human body",
+    "everyday human behaviour: why people do small things in daily life (phone, friends, family, work)",
+    "psychology of first impressions, attraction and body language (only well-established findings)",
+    "psychology of habits, procrastination, motivation and willpower",
+    "emotions, mood, stress and how people react to them",
+    "decision making, cognitive biases and why smart people make silly choices",
+    "memory: why we forget, false memories, why we remember some things forever",
+    "social psychology: crowds, conformity, persuasion, why we copy others",
+    "friendship, relationships, texting, jealousy and loneliness (well-established findings only)",
+    "shopping, money and attention psychology: why we buy, scroll and get hooked",
+    "sleep, dreams and tiredness: what they do to mood and behaviour",
+    "focus and attention: why the mind wanders, multitasking, distraction",
+    "childhood, learning and curiosity: how people learn and why praise/habits stick",
 ]
 
 FORMATS = {
-    "shocking_fact": "ONE surprising verifiable fact. Hook = result, explanation after.",
-    "personal_what_if": "A 'what if this happened to YOU' scenario in real science.",
-    "myth_vs_truth": "Common belief stated first, then truth with real reason.",
-    "mystery_explained": "Strange real phenomenon, then how it works.",
-    "top3": "Three related facts, third is most shocking.",
+    "shocking_fact": "ONE surprising verifiable psychology fact about human behavior. Hook = result, explanation after.",
+    "personal_what_if": "A 'what happens in your brain when you do X' scenario in real psychology.",
+    "myth_vs_truth": "Common psychological myth stated first, then real truth with reason.",
+    "mystery_explained": "Strange real human behavior phenomenon, then how mind works.",
+    "top3": "Three related psychology facts, third is most shocking.",
 }
 
 # Rotating hook styles -> avoids the "same template every video" penalty.
 HOOK_STYLES = {
     "impossible_claim": (
-        "State something that sounds impossible but is true. DO NOT explain it - the reason is the payoff at the END.",
-        ["This fish has a see-through head.", "Some trees are older than writing."],
+        "State something about human mind that sounds impossible but is true. DO NOT explain it - the reason is the payoff at the END.",
+        ["Your brain lies to you every single day.", "You can predict someone's thoughts with this."],
     ),
     "direct_question": (
-        "Ask a question the viewer cannot answer instantly and WANTS answered.",
-        ["Why can't you tickle yourself?", "Why does the ocean glow at night?"],
+        "Ask a psychology question the viewer cannot answer instantly and WANTS answered.",
+        ["Why do you replay embarrassing moments at 3 AM?", "Why do you forget why you entered a room?"],
     ),
     "warning": (
-        "A warning or 'never do this' that creates tension and makes them need the reason.",
-        ["Never swim near this glowing jellyfish.", "Stop holding your breath like that."],
+        "A psychological warning or 'never do this' that creates tension and makes them need the reason.",
+        ["Never say this to someone who is angry.", "Stop ignoring this body language sign."],
     ),
     "number_shock": (
-        "Open with ONE shocking specific number that begs 'how?'.",
-        ["Four hundred years old. Still alive.", "This frog's heart stops. Daily."],
+        "Open with ONE shocking specific psychological stat that begs 'how?'.",
+        ["Seven seconds. That is all it takes to judge you.", "Ninety percent of your choices are subconscious."],
     ),
     "contradiction": (
-        "Attack a belief the viewer holds, in the first words.",
-        ["Goldfish do not forget in three seconds.", "Lightning does strike twice."],
+        "Attack a psychological belief the viewer holds, in the first words.",
+        ["Multitasking does not make you productive.", "Expressing anger does not calm you down."],
     ),
     "you_scenario": (
-        "Put the viewer's own body or life inside the situation.",
-        ["Your eyes are lying to you right now.", "Your brain deletes things while you sleep."],
+        "Put the viewer's own mind or daily behavior inside the situation.",
+        ["Your mind is tricking you right now.", "Your brain deletes memories while you sleep."],
     ),
     "stop_doing": (
-        "Tell the viewer to STOP an everyday action and hint at a hidden cost - the reason is the payoff at the END.",
-        ["Stop touching things in shops.", "Stop cracking your knuckles like that."],
+        "Tell the viewer to STOP an everyday habit and hint at a hidden psychological cost - the reason is the payoff at the END.",
+        ["Stop touching things in shops.", "Stop checking your phone first thing in the morning."],
     ),
     "why_want": (
-        "Ask WHY someone or something secretly WANTS the viewer to do an ordinary thing.",
-        ["Why do shops want you touching things?", "Why does food want you hungry again?"],
+        "Ask WHY people or shops secretly WANT the viewer to do an ordinary thing.",
+        ["Why do shops want you touching things?", "Why do apps keep you scrolling endlessly?"],
     ),
     "payoff_promise": (
-        "Promise a specific reveal that arrives in the LAST seconds (never say 'watch till the end').",
-        ["Watch what this frog does to survive.", "This one detail explains everything."],
+        "Promise a specific psychological reveal that arrives in the LAST seconds (never say 'watch till the end').",
+        ["Watch what your brain does when you lie.", "This one psychological trick explains your habit."],
     ),
 }
 
@@ -130,8 +126,8 @@ LOOP_STYLES = {
     ),
     "mirror_loop": (
         "Last sentence ends on the hook's key phrase as a final twist "
-        "(e.g. hook 'This fish has a see-through head.' -> last "
-        "'...and that is why this fish has a see-through head.')."
+        "(e.g. hook 'Your brain lies to you every single day.' -> last "
+        "'...and that is why your brain lies to you every single day.')."
     ),
     "lead_in_loop": (
         "Last sentence is an UNFINISHED lead-in that the HOOK completes when the video replays. "
@@ -146,10 +142,10 @@ LEAD_IN_WORDS = {"why", "because", "so", "that", "how", "when", "where", "which"
 # On-screen comment bait for the last 1.7s (never spoken) - used if Gemini returns none
 END_QUESTION_POOL = [
     "Ever noticed this yourself?",
-    "Did you know this one?",
-    "Would you dare try this?",
+    "Does your brain do this too?",
+    "Have you experienced this?",
     "Which part shocked you most?",
-    "Had you heard this before?",
+    "Be honest: do you do this?",
 ]
 
 # Stock sites cannot give us these -> keep them out of keywords.
@@ -159,8 +155,7 @@ FORBIDDEN_KEYWORD_WORDS = {
 }
 
 # Words that should never be what the camera shows unless narration is about them
-OFF_TOPIC_RISK = {"girl", "woman", "man", "boy", "model", "fashion", "jet", "airplane",
-                  "business", "office", "meeting", "handshake", "building", "skyscraper"}
+OFF_TOPIC_RISK = {"jet", "airplane", "skyscraper", "galaxy", "planet", "dinosaur", "volcano"}
 
 
 # ---------------------------------------------------------------- history ----
@@ -225,7 +220,7 @@ def _is_duplicate(script, recent):
     title_new = (script.get("title") or "").lower()
 
     for r in recent:
-        # 1) same subject (e.g. 'barreleye' vs 'barreleye fish')
+        # 1) same subject (e.g. 'subconscious mind' vs 'subconscious')
         subj_old = set((r.get("subject_key") or "").split())
         if subj_new and subj_old and (subj_new <= subj_old or subj_old <= subj_new):
             print(f"Duplicate SUBJECT with: {r.get('title')} [{r.get('subject')}]")
@@ -421,13 +416,11 @@ def normalize_and_validate(data):
         if any(re.search(rf"\b{re.escape(b)}\b", kw) for b in FORBIDDEN_KEYWORD_WORDS):
             problems.append(f"scene {i} keyword '{kw}' has a name stock sites can't film")
 
-        # keyword must be tied to the subject world OR to this sentence
         kw_stems = content_stems(kw)
         narr_stems = content_stems(sc["narration"])
         if not (kw_stems & (subject_ctx | narr_stems)):
             off_topic += 1
             off_topic_kw.append(f"scene {i} '{kw}'")
-        # risky generic people/objects only allowed if the narration mentions them
         risky = [w for w in kw.split() if w in OFF_TOPIC_RISK and w not in sc["narration"].lower()]
         if risky:
             problems.append(f"scene {i} keyword '{kw}' is off-topic stock ({risky[0]})")
@@ -435,7 +428,6 @@ def normalize_and_validate(data):
         if not sc["fallback_keyword"]:
             sc["fallback_keyword"] = domain[0] if domain else subject
 
-    # one loosely-related scene is fine (metaphor shot); two or more = drifting visuals
     if off_topic >= 2:
         problems.append("keywords not tied to subject/narration: " + "; ".join(off_topic_kw))
 
@@ -481,20 +473,20 @@ def normalize_and_validate(data):
 
 # ----------------------------------------------------------------- prompts ----
 _SCHEMA = """{
-  "core_fact": "one English sentence stating the main fact",
-  "subject": "the exact main thing of the video, 1-3 words (e.g. 'barreleye fish', 'lightning', 'human eye')",
-  "visual_domain": ["2-3 broad stock-footage search terms for the subject's WORLD, e.g. 'deep sea fish', 'underwater ocean'"],
-  "hook_title": "3-7 word BOLD on-screen title for the first 3 seconds, may end with ?! (e.g. 'This Fish Has A Transparent Head?!')",
-  "end_question": "3-8 word question about THIS topic, shown on screen in the last 2 seconds so viewers answer in the comments (e.g. 'Have you ever noticed this?')",
+  "core_fact": "one English sentence stating the main psychology fact",
+  "subject": "the exact main topic of human behavior or psychology, 1-3 words (e.g. 'subconscious mind', 'body language', 'memory')",
+  "visual_domain": ["2-3 broad stock-footage search terms for the subject's WORLD, e.g. 'person thinking', 'people talking'"],
+  "hook_title": "3-7 word BOLD on-screen title for the first 3 seconds, may end with ?! (e.g. 'Your Brain Is Lying To You?!')",
+  "end_question": "3-8 word question about THIS psychology topic, shown on screen in the last 2 seconds so viewers answer in the comments (e.g. 'Have you noticed this?')",
   "title": "English YouTube title, max 60 chars, one emoji, no hashtags",
-  "description": "2-3 short English lines + one line of English search keywords.",
-  "tags": ["15-20 lowercase English tags"],
+  "description": "2-3 short English lines focused strictly on psychology facts and human behavior + one line of relevant psychology search keywords. Absolutely no science experiments.",
+  "tags": ["15-20 lowercase English tags related to psychology, mind facts, and human behavior"],
   "scenes": [
     {
       "narration": "ONE short spoken sentence in natural English",
       "caption": "2-4 word on-screen text",
-      "search_keyword": "2-4 plain words = what the camera shows for THIS sentence (must be about the subject or its world)",
-      "fallback_keyword": "1-3 plain words, broader but still the same subject world"
+      "search_keyword": "2-4 plain words = what the camera shows for THIS sentence (must be people or situations showing this behavior)",
+      "fallback_keyword": "1-3 plain words, broader but still the same psychology world"
     }
   ]
 }"""
@@ -506,9 +498,10 @@ def _writer_prompt(plan):
     hook_desc, hook_examples = HOOK_STYLES[plan["hook_style"]]
     hook_ex = " | ".join(hook_examples)
     return f"""
-You are the head writer of a top English YouTube Shorts facts channel (US/UK Gen Z + young millennials).
+You are the head writer of a top English YouTube Shorts channel about PSYCHOLOGY FACTS and HUMAN BEHAVIOR
+(US/UK Gen Z + young millennials). No science experiments, no magic tricks, no animal/space trivia.
 Viewers decide in 1-2 SECONDS whether to swipe. Your job: stop the swipe, hold the eyes with an
-OPEN QUESTION that is only answered at the very end, and make the replay feel automatic.
+OPEN QUESTION about human mind/behavior that is only answered at the very end, and make the replay feel automatic.
 
 CATEGORY: {plan['category']}
 FORMAT: {plan['format']} -> {FORMATS[plan['format']]}
@@ -525,12 +518,11 @@ DO NOT repeat or paraphrase these earlier videos:
 ============================================================
 PICK A TOPIC THE CAMERA CAN SHOW  (most important choice)
 ============================================================
-- The strangest part of the fact must be VISIBLE in stock footage: an animal doing it, a storm, lava,
-  a body close-up, food changing, a place, a machine. People watch pictures first, words second.
-- AVOID facts that are only sound, maths, time, abstract physics or "scientists say" - the footage
-  will be a boring sky/desk/space and viewers swipe. (Bad: 'you cannot hear distant thunder'.
-  Better: something with a dramatic, moving, recognisable subject.)
-- Prefer a subject the viewer feels in their OWN life or body, or a creature/place that looks unreal.
+- The strangest part of the psychology fact must be VISIBLE in stock footage: a person reacting, people talking,
+  someone looking in a mirror, scrolling a phone, sleeping, or interacting in a daily life situation.
+- AVOID abstract concepts without filmable situations. Show the SITUATION: 'man arguing friend',
+  'woman scrolling phone bed', 'person looking mirror', 'friends texting phone'.
+- Prefer a psychology topic the viewer feels in their OWN life or body language.
 
 ============================================================
 LENGTH = 15-21 SECONDS (shorter = replayed more)
@@ -542,11 +534,8 @@ LENGTH = 15-21 SECONDS (shorter = replayed more)
 STRUCTURE = ONE OPEN LOOP, CLOSED AT THE END
 ============================================================
 1. HOOK (scene 1, MAX 7 words): creates a question the viewer can ONLY answer by watching to the end.
-   NEVER give the answer in the hook. First 3 words = shock, danger or a burning question.
-   Name the SUBJECT (or its strangest property) so the first shot can show exactly that.
+   NEVER give the answer in the hook. First 3 words = shock, warning or a burning question.
    NEVER start with 'Did you know', 'Have you ever', 'Today', 'In this video', or any greeting.
-   Do NOT state a flat boring claim ('Thunder cannot travel far.') - a viewer can agree and swipe.
-   Make them NEED the reason.
 2. ESCALATE (scenes 2-3): each sentence adds stakes or a stranger detail and ends on a mini-cliff.
    Do NOT reveal the answer yet.
 3. RE-HOOK (about scene 3 or 4): one pattern-interrupt line, e.g. 'But that is not the weird part.'
@@ -557,17 +546,23 @@ STRUCTURE = ONE OPEN LOOP, CLOSED AT THE END
    back into the hook. NO 'follow', 'subscribe', 'like', 'comment', 'part 2'. NO CTA. No 'thanks for watching'.
 
 ============================================================
+DESCRIPTION & TAGS (STRICT REQUIREMENT)
+============================================================
+`description`: Must be 2-3 short English lines about psychology, human mind, and behavioral secrets, followed by relevant psychology search keywords (e.g. Search keywords: psychology facts, mind tricks, human behavior, subconscious mind). Absolutely NO science experiment keywords.
+`tags`: Must be 15-20 lowercase English tags specifically about psychology, mindset, brain facts, and human behavior.
+
+============================================================
 END QUESTION (on-screen only, never spoken)
 ============================================================
-`end_question`: 3-8 words, a question about THIS topic that makes viewers answer in the comments
-('Have you ever noticed this?', 'Would you dare try this?', 'Which part shocked you most?').
+`end_question`: 3-8 words, a question about THIS psychology topic that makes viewers answer in the comments
+('Have you ever noticed this?', 'Does your brain do this too?').
 It is shown as text in the last 2 seconds. It is NOT part of any narration, so the spoken loop stays
-seamless. This is the ONLY place where comment-bait is allowed.
+seamless.
 
 ============================================================
 ACCURACY (non-negotiable)
 ============================================================
-- Only real, well-established facts. No invented statistics. Round numbers are fine.
+- Only real, well-established psychology findings. No invented statistics. Round numbers are fine.
 
 ============================================================
 LANGUAGE
@@ -578,24 +573,15 @@ LANGUAGE
 ============================================================
 VISUALS - EVERY SHOT MUST SHOW WHAT THE VOICE SAYS
 ============================================================
-`subject`: the precise main thing (1-3 words). If the video is about a barreleye fish -> "barreleye fish".
-`visual_domain`: 2-3 broader stock-footage terms for the subject's world ("deep sea fish", "underwater ocean").
+`subject`: the precise main psychology topic (1-3 words, e.g. "subconscious mind", "body language").
+`visual_domain`: 2-3 broader stock-footage terms for people/behavior ("person thinking", "people talking").
 
 For each scene:
-  search_keyword (2-4 words) = what a camera would film DURING THIS SENTENCE.
-     - It MUST be about the subject or its world. Real names are fine (animal, planet, food, landmark,
-       body part, phenomenon) - the search system falls back to `fallback_keyword` if needed.
-     - Prefer MOVING, concrete, filmable shots: 'jellyfish dark water', 'human eye closeup',
-       'lightning storm sky', 'lava flowing closeup', 'frog jumping water'. Motion beats still life.
-     - FORBIDDEN: unrelated people or objects (girl, woman, man, jet, office, building, handshake)
-       unless the sentence is literally about them.
-     - No people's names, brands, abstract ideas ('curiosity', 'danger').
-  fallback_keyword (1-3 words) = broader term of the SAME world ('fish underwater').
-  All scenes must use DIFFERENT search_keywords, but all stay inside the subject's world.
-  Scene 1 = the exact subject at its most dramatic: closeup, fast motion, high contrast, nothing static.
-
-SELF-CHECK: (a) could a viewer answer the hook before the end? If yes, rewrite it. (b) if a viewer heard
-each sentence and saw ONLY that keyword's footage, would it match? If not, change the keyword.
+  search_keyword (2-4 words) = what a camera would film DURING THIS SENTENCE (ordinary people in daily actions).
+     - FORBIDDEN: science experiments, laboratory tricks, brain animations, galaxies, jets, skyscrapers.
+  fallback_keyword (1-3 words) = broader term of the SAME psychology world ('person thinking').
+  All scenes must use DIFFERENT search_keywords.
+  Scene 1 = bright, high-contrast, closeup of a person (face, hands, phone).
 
 Return ONLY valid JSON:
 {_SCHEMA}
@@ -604,29 +590,21 @@ Return ONLY valid JSON:
 
 def _editor_prompt(draft_json, plan):
     return f"""
-You are a strict fact-checker, retention editor AND visual-continuity editor.
+You are a strict fact-checker, retention editor AND visual-continuity editor for a PSYCHOLOGY FACTS channel.
 Return the FINAL JSON in the exact same schema (keep `subject`, `visual_domain`, `hook_title`).
 
 CHECKLIST
-1. Fact-check every claim. Replace wrong or exaggerated claims.
-2. Hook (scene 1): MAX 7 words, first 3 words shock/question, names the subject or its strangest property.
-   It must be an OPEN LOOP: the viewer cannot know the answer until the end. If the hook is a flat
-   claim someone could agree with and swipe, rewrite it into a question/tension. Keep style: {plan['hook_style']}.
-3. The answer must NOT appear before the second-to-last scene. Move it there if it leaks early.
-4. Every scene: one sentence, 5-10 words, natural spoken English. 5-8 scenes, 44-60 words total
-   (video MUST be 15-21 seconds). Cut every filler word.
+1. Fact-check every claim. Replace wrong, exaggerated, or pop-psychology myth claims.
+2. Hook (scene 1): MAX 7 words, first 3 words shock/question, names the psychology subject.
+   It must be an OPEN LOOP: the viewer cannot know the answer until the end. Keep style: {plan['hook_style']}.
+3. The answer must NOT appear before the second-to-last scene.
+4. Every scene: one sentence, 5-10 words, natural spoken English. 5-8 scenes, 44-60 words total.
 5. Around scene 3-4 keep one pattern-interrupt line ('But that is not the weird part.').
 6. LOOP: follow loop style `{plan['loop_style']}`: {LOOP_STYLES[plan['loop_style']]}
-   No CTA, no 'follow for more'.
-7. `hook_title`: 3-7 words, bold, curiosity-driven, matches the hook, does not give the answer.
-8. Title: English, max 60 chars, one emoji, honest, curiosity-driven.
-9. VISUAL MATCH: for every scene the search_keyword must show what the sentence says AND belong
-   to the subject's world, preferably something MOVING. Rewrite keywords that drift (no girls, jets,
-   offices, buildings or other unrelated stock unless the sentence is about them). 2-4 plain words,
-   all different. fallback_keyword = broader term of the same world.
-10. Do not change `subject` to something else.
-11. `end_question`: keep/add a 3-8 word on-screen question about the topic that invites comments
-    (never part of the narration).
+7. `hook_title`: 3-7 words, bold, curiosity-driven, matches the hook.
+8. Title & Description: Title max 60 chars. Description MUST be 2-3 lines about psychology facts and human behavior, followed by psychology search keywords. Absolutely NO science experiment topics or keywords in description.
+9. VISUAL MATCH: for every scene the search_keyword must show ordinary people doing daily actions that match the sentence. No science experiments, no brain animations, no jets/space.
+10. `end_question`: keep/add a 3-8 word on-screen question about the topic that invites comments.
 
 Return ONLY the corrected JSON.
 
