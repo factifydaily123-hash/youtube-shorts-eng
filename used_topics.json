@@ -555,6 +555,18 @@
       "subject_key": "conformity social",
       "fact": "Humans frequently conform to group opinion, even when it's demonstrably false, primarily to avoid social discomfort and ostracization.",
       "fingerprint": "ostracization demonstrably conformity discomfort frequently obviously primarily evidence powerful conform exactly opinion percent seventy desire ignore obviou people social someth"
+    },
+    {
+      "date": "2026-10-09T20:18:06",
+      "category": "memory: why we forget, false memories, why we remember some things forever",
+      "format": "personal_what_if",
+      "hook_style": "contradiction",
+      "loop_style": "answer_loop",
+      "title": "Your 'Perfect' Memory Is A Lie! 🧠",
+      "subject": "false memories",
+      "subject_key": "false memory",
+      "fact": "Your memories are not perfect recordings of the past; your brain actively reconstructs them, often inventing or altering details, making false memories feel real.",
+      "fingerprint": "reconstruct recording accurate actively perfect believ detail invent memory moment recall alter brain false often trick vivid feel here mind"
     }
   ]
 }
