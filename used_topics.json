@@ -507,6 +507,30 @@
       "subject_key": "giza pyramid",
       "fact": "The ancient Egyptian pyramids of Giza were built by skilled, paid laborers and craftspeople, not slaves.",
       "fingerprint": "craftspeople discovery actually egyptian ancient builder complex everyth exactly history laborer medical popular pyramid change family recent suffer worker build"
+    },
+    {
+      "date": "2026-10-09T10:28:35",
+      "category": "extreme weather you can SEE (lightning, tornado, hail, snow, floods)",
+      "format": "mystery_explained",
+      "hook_style": "warning",
+      "loop_style": "mirror_loop",
+      "title": "Why Does The Sky Turn Green Before A Storm? ⚠️",
+      "subject": "green sky",
+      "subject_key": "green sky",
+      "fact": "A green sky before a storm is a warning sign of severe weather like tornadoes, caused by large hail and water droplets scattering sunlight.",
+      "fingerprint": "sunlight droplet scatter terrify through tornado weather severe signal color eerie green heavy large light often reach storm water weird"
+    },
+    {
+      "date": "2026-10-09T10:29:55",
+      "category": "megastructures, bridges, dams, trains and machines (how they really work)",
+      "format": "personal_what_if",
+      "hook_style": "stop_doing",
+      "loop_style": "answer_loop",
+      "title": "Why trust elevator cables? 🤫",
+      "subject": "elevator safety",
+      "subject_key": "elevator safety",
+      "fact": "Modern elevators have multiple redundant cables and powerful automatic safety brakes that grip guide rails, making a free-fall nearly impossible.",
+      "fingerprint": "uncontrollably impossible automatic instantly redundant elevator multiple powerful failure imagine plummet prevent cannot modern nearly safety simply clamp guide right"
     }
   ]
 }
