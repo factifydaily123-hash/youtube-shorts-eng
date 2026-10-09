@@ -531,6 +531,30 @@
       "subject_key": "elevator safety",
       "fact": "Modern elevators have multiple redundant cables and powerful automatic safety brakes that grip guide rails, making a free-fall nearly impossible.",
       "fingerprint": "uncontrollably impossible automatic instantly redundant elevator multiple powerful failure imagine plummet prevent cannot modern nearly safety simply clamp guide right"
+    },
+    {
+      "date": "2026-10-09T16:31:35",
+      "category": "psychology of first impressions, attraction and body language (only well-established findings)",
+      "format": "shocking_fact",
+      "hook_style": "payoff_promise",
+      "loop_style": "mirror_loop",
+      "title": "Make People Instantly Like You! 🤔",
+      "subject": "body language",
+      "subject_key": "body language",
+      "fact": "Unconsciously mirroring another person's body language or expressions causes them to feel a subconscious bond and greater trust towards you.",
+      "fingerprint": "unconsciously subconsciou expression unconsciou chameleon instantly language powerful shortcut another connect greater rapport effect mirror people person secret social subtly"
+    },
+    {
+      "date": "2026-10-09T16:33:44",
+      "category": "social psychology: crowds, conformity, persuasion, why we copy others",
+      "format": "myth_vs_truth",
+      "hook_style": "number_shock",
+      "loop_style": "lead_in_loop",
+      "title": "Why 75% Agree With Obvious Lies 🤔",
+      "subject": "social conformity",
+      "subject_key": "conformity social",
+      "fact": "Humans frequently conform to group opinion, even when it's demonstrably false, primarily to avoid social discomfort and ostracization.",
+      "fingerprint": "ostracization demonstrably conformity discomfort frequently obviously primarily evidence powerful conform exactly opinion percent seventy desire ignore obviou people social someth"
     }
   ]
 }
