@@ -5,7 +5,6 @@ on:
     # ONE short per day. The cron only WAKES the workflow up every hour; the `gate`
     # job (modules/post_schedule.py) picks a random hour per day inside US waking hours
     # (10:00-22:00 US Eastern = 7 AM-7 PM Pacific), posts once, then stays quiet.
-    # Hours below cover both daylight-saving and standard time (UTC).
     - cron: '7 14-23 * * *'
     - cron: '7 0-2 * * *'
 
@@ -32,9 +31,9 @@ jobs:
       id: decide
       env:
         EVENT_NAME: ${{ github.event_name }}
-        POST_WINDOW_START: '10'      # US Eastern, inclusive
-        POST_WINDOW_END: '22'        # US Eastern, exclusive
-        POST_MAX_DELAY_MIN: '45'     # extra random minutes so the minute is random too
+        POST_WINDOW_START: '10'
+        POST_WINDOW_END: '22'
+        POST_MAX_DELAY_MIN: '45'
         SCHEDULE_SALT: ${{ secrets.SCHEDULE_SALT }}
       run: python3 modules/post_schedule.py gate
 
@@ -42,7 +41,6 @@ jobs:
     needs: gate
     if: needs.gate.outputs.go == 'true'
     runs-on: ubuntu-latest
-    # random delay (max ~45 min) + build/upload (~15 min) -> keep headroom
     timeout-minutes: 90
 
     steps:
@@ -96,7 +94,6 @@ jobs:
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        # CPU-only torch (the default wheel pulls ~2 GB of CUDA libs we never use)
         pip install torch --index-url https://download.pytorch.org/whl/cpu
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
@@ -134,11 +131,10 @@ jobs:
         ENABLE_CAPTIONS: '0'
         HOOK_CAPTION: '1'
 
-        # Voice engine: Kokoro (natural, local) first, Edge-TTS only as fallback
+        # Voice engine
         TTS_ENGINE: 'auto'
-        KOKORO_VOICE: 'af_heart'        # female, best quality. Male: 'am_michael'
-        SHOT_SECONDS: '2.0'             # a new stock clip about every 2 s
-        PRO_FX: '1'                     # ffmpeg hook glitch + per-cut kick/shake/blur/flash
+        KOKORO_VOICE: 'af_heart'
+        PRO_FX: '1'
 
         # Edge-TTS fallback chain
         TTS_VOICE_PRIMARY: 'en-US-AndrewMultilingualNeural'
@@ -146,7 +142,7 @@ jobs:
         TTS_VOICE_FALLBACK2: 'en-US-GuyNeural'
         TTS_VOICE_FALLBACK3: 'en-GB-RyanNeural'
 
-        # Voice speed = natural (~1.07x)
+        # Voice speed
         TTS_RATE: '+7%'
         TTS_PITCH: '+0Hz'
 
