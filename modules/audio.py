@@ -468,4 +468,164 @@ def build_sfx_track(scene_timings, total_duration, out_path, seed=None,
     """
     style = style or {}
     rng = np.random.default_rng(seed if seed is not None else random.randrange(1 << 30))
-    n = int
+    n = int(SR * (total_duration + 1.5))
+    track = np.zeros(n, dtype=np.float32)
+
+    whoosh_gain = style.get("sfx_whoosh_gain", 0.48)
+    pop_gain = style.get("sfx_pop_gain", 0.18)
+    click_gain = style.get("sfx_click_gain", 0.33)
+
+    whoosh_a = synth_whoosh(0.42, True, rng)
+    whoosh_b = synth_whoosh(0.42, False, rng)
+    boom = synth_boom(1.0, rng)
+    riser = synth_riser(1.0, rng)
+    pop = synth_pop()
+
+    hook_start = scene_timings[0][0] if scene_timings else 0.0
+    _place(track, boom, hook_start, 0.9)
+
+    count = len(scene_timings)
+    for i, (start, _dur) in enumerate(scene_timings):
+        if i == 0:
+            continue
+        if i == count - 2 and count >= 4:
+            _place(track, riser, max(0.0, start - 1.0), 0.6)
+            _place(track, boom, start, 0.65)
+            continue
+        if i == count - 1:
+            _place(track, pop, max(0.0, start - 0.04), 0.3)
+            continue
+        w = whoosh_a if i % 2 else whoosh_b
+        _place(track, w, start - 0.10, whoosh_gain)
+
+    if events:
+        click = synth_click(rng=rng)
+        short_a = synth_whoosh(0.20, True, rng)
+        short_b = synth_whoosh(0.20, False, rng)
+        last_pop = -9.0
+        for k, (t_ev, kind) in enumerate(sorted(events)):
+            if t_ev < 0 or t_ev > total_duration:
+                continue
+            if kind == "cut":
+                _place(track, short_a if k % 2 else short_b, t_ev - 0.07, whoosh_gain * 0.62)
+                _place(track, click, t_ev, click_gain * 0.66)
+            elif kind == "pop":
+                if t_ev < 0.20 or t_ev - last_pop < 0.45:
+                    continue
+                _place(track, pop, t_ev, pop_gain)
+                last_pop = t_ev
+            elif kind == "click":
+                _place(track, click, t_ev, click_gain)
+
+    track = np.tanh(track * 1.15)
+    pcm = (np.clip(track, -1, 1) * 32767).astype(np.int16)
+    stereo = np.repeat(pcm[:, None], 2, axis=1)
+
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    with wave.open(out_path, "wb") as wf:
+        wf.setnchannels(2)
+        wf.setsampwidth(2)
+        wf.setframerate(SR)
+        wf.writeframes(stereo.tobytes())
+    return out_path
+
+
+# ------------------------------------------------------------------ mix ----
+def _build_voice_track(voice_paths, scene_timings, total_duration, out_path):
+    cmd = ["ffmpeg", "-y"]
+    for p in voice_paths:
+        cmd += ["-i", p]
+    parts, labels = [], []
+    for i, (start, _d) in enumerate(scene_timings):
+        ms = max(0, int(start * 1000))
+        parts.append(
+            f"[{i}:a]aresample={SR},aformat=channel_layouts=stereo,adelay={ms}|{ms}[v{i}]"
+        )
+        labels.append(f"[v{i}]")
+    graph = (
+        ";".join(parts)
+        + ";"
+        + "".join(labels)
+        + f"amix=inputs={len(labels)}:normalize=0:duration=longest,"
+        + f"apad=whole_dur={total_duration:.3f},atrim=0:{total_duration:.3f}[out]"
+    )
+    cmd += ["-filter_complex", graph, "-map", "[out]", "-ar", str(SR), out_path]
+    r = _run(cmd)
+    if r.returncode != 0:
+        raise RuntimeError("voice track build failed:\n" + r.stderr[-1200:])
+    return out_path
+
+
+def build_final_audio(voice_paths, scene_timings, total_duration, bg_music_path,
+                      out_dir="assets/mix", out_name="final_audio.wav",
+                      bgm_level=0.55, sfx_level=0.9, sfx_events=None, style=None):
+    """
+    Master chain: voice EQ + de-esser + compressor; BGM ducked by voice;
+    synthesized SFX (gains from `style`); loudnorm -14 LUFS.
+    """
+    os.makedirs(out_dir, exist_ok=True)
+    voice_wav = os.path.join(out_dir, "voice_track.wav")
+    sfx_wav = os.path.join(out_dir, "sfx_track.wav")
+    out_path = os.path.join(out_dir, out_name)
+
+    _build_voice_track(voice_paths, scene_timings, total_duration, voice_wav)
+    build_sfx_track(scene_timings, total_duration, sfx_wav, events=sfx_events, style=style)
+
+    inputs = ["-i", voice_wav, "-i", sfx_wav]
+    has_bgm = bool(bg_music_path and os.path.exists(bg_music_path)
+                   and os.path.getsize(bg_music_path) > 1000)
+
+    voice_chain = (
+        "[0:a]highpass=f=90,"
+        "equalizer=f=250:t=q:w=1.0:g=-2.5,"
+        "equalizer=f=800:t=q:w=1.2:g=-1.0,"
+        "equalizer=f=3200:t=q:w=1.0:g=3.5,"
+        "equalizer=f=6500:t=q:w=1.5:g=-2.0,"
+        "acompressor=threshold=0.085:ratio=3.8:attack=5:release=85:makeup=2.8,"
+        "alimiter=limit=0.95"
+    )
+
+    if has_bgm:
+        try:
+            probe = _run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                          "-of", "default=nw=1:nk=1", bg_music_path], 30)
+            bgm_len = float(probe.stdout.strip())
+        except Exception:
+            bgm_len = 0.0
+        start = (random.uniform(0, bgm_len - total_duration - 1)
+                 if bgm_len > total_duration + 2 else 0.0)
+        inputs += ["-stream_loop", "-1", "-ss", f"{start:.2f}", "-i", bg_music_path]
+
+        graph = (
+            f"{voice_chain}[vc];"
+            "[vc]asplit=2[vmix][vside];"
+            f"[2:a]atrim=0:{total_duration:.3f},asetpts=N/SR/TB,"
+            "aformat=channel_layouts=stereo,"
+            "highpass=f=60,lowpass=f=9000,"
+            f"volume={bgm_level},"
+            f"afade=t=in:d=0.02,afade=t=out:st={max(0.0, total_duration - 0.04):.2f}:d=0.04[bgm];"
+            "[bgm][vside]sidechaincompress=threshold=0.02:ratio=10:attack=15:release=350:makeup=1[bgduck];"
+            f"[1:a]volume={sfx_level}[sfx];"
+            "[vmix][bgduck][sfx]amix=inputs=3:normalize=0:duration=first[mix];"
+        )
+    else:
+        print("BG music missing - voice + SFX only")
+        graph = (
+            f"{voice_chain}[vmix];"
+            f"[1:a]volume={sfx_level}[sfx];"
+            "[vmix][sfx]amix=inputs=2:normalize=0:duration=first[mix];"
+        )
+
+    graph += (
+        "[mix]loudnorm=I=-14:TP=-1.5:LRA=9,"
+        f"atrim=0:{total_duration:.3f},"
+        "alimiter=limit=0.97[master]"
+    )
+
+    cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", graph, "-map", "[master]",
+           "-ar", str(SR), "-c:a", "pcm_s16le", out_path]
+    r = _run(cmd, 300)
+    if r.returncode != 0 or not os.path.exists(out_path):
+        raise RuntimeError("final audio mix failed:\n" + r.stderr[-1500:])
+    print(f"Final audio ready: {out_path}")
+    return out_path
