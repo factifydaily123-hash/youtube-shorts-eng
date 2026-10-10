@@ -79,6 +79,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y \
           ffmpeg \
+          espeak-ng \
           imagemagick \
           libjpeg-dev \
           zlib1g-dev \
@@ -97,9 +98,17 @@ jobs:
         sudo sed -i 's/rights="none" pattern="@\*"/rights="read|write" pattern="@*"/' /etc/ImageMagick-6/policy.xml || true
         sudo sed -i 's/policy domain="coder" rights="none" pattern="PDF"/policy domain="coder" rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml || true
 
+    - name: Cache Kokoro voice model
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/huggingface
+        key: kokoro-82m-v1
+
     - name: Install Python Dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
+        # CPU-only torch (the default wheel pulls ~2 GB of CUDA libs we never use)
+        pip install torch --index-url https://download.pytorch.org/whl/cpu
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Verify Fonts + FFmpeg
@@ -136,14 +145,20 @@ jobs:
         ENABLE_CAPTIONS: '0'
         HOOK_CAPTION: '1'
 
-        # Voice chain (Edge-TTS "ElevenLabs Killer" setup)
+        # Voice engine: Kokoro (natural, local) first, Edge-TTS only as fallback
+        TTS_ENGINE: 'auto'
+        KOKORO_VOICE: 'af_heart'        # female, best quality. Male: 'am_michael'
+        SHOT_SECONDS: '2.0'             # a new stock clip about every 2 s
+        PRO_FX: '1'                     # ffmpeg hook glitch + per-cut kick/shake/blur/flash
+
+        # Edge-TTS fallback chain
         TTS_VOICE_PRIMARY: 'en-US-AndrewMultilingualNeural'
         TTS_VOICE_FALLBACK1: 'en-US-BrianMultilingualNeural'
         TTS_VOICE_FALLBACK2: 'en-US-GuyNeural'
         TTS_VOICE_FALLBACK3: 'en-GB-RyanNeural'
 
-        # Voice speed = 1.15x
-        TTS_RATE: '+15%'
+        # Voice speed = natural (~1.07x)
+        TTS_RATE: '+7%'
         TTS_PITCH: '+0Hz'
 
         # Last scene re-uses the hook footage -> seamless visual loop
