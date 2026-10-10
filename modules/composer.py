@@ -1,17 +1,19 @@
 """
-Video composer - MoviePy + FFmpeg. STYLE-AWARE version.
+Video composer - MoviePy + FFmpeg. STYLE + TRANSITION AWARE version.
 
 Every render gets a "style" dict (modules.style_variation.get_style) that
 randomizes caption position, hook card position/tilt/colour, end-question
-position, scene rhythm, SFX gains and the final colour grade. This makes each
-video look hand-edited rather than produced from a fixed template, so YouTube's
-reused-content / mass-produced detector does not flag the channel.
+position, scene rhythm, SFX gains and the final colour grade. Scene joins are
+randomized too (modules.transitions) so the video never uses the same
+transition palette twice. This makes each video look hand-edited rather than
+produced from a fixed template.
 
 Features:
   - Big bold hook card (first 3 s) - position/colour/duration randomized per video
   - Word-by-word captions (via modules.captions) - position/rotation randomized
   - Slow punch-in zoom on every scene (+12% over duration)
   - Pro audio mix (voice EQ + synthesized SFX + ducked BGM + loudnorm)
+  - Randomized xfade transitions between scenes (wipe/slide/fade/circle/etc.)
   - Final ffmpeg colour pass (grade / vignette / grain) - parameters randomized
 """
 
@@ -32,6 +34,7 @@ import moviepy.audio.fx.all as afx
 from modules.audio import build_final_audio, INTER_SCENE_PAUSE, get_duration
 from modules import pro_fx
 from modules.style_variation import get_style
+from modules import transitions as transitions_mod
 
 TARGET_W = 1080
 TARGET_H = 1920
@@ -52,7 +55,7 @@ CTA_POSITION_RATIO = 0.85
 CTA_START_RATIO = 0.55
 CTA_FADE_DURATION = 0.5
 
-# Pacing: a NEW shot every ~2-3 s (real value comes from style["shot_seconds"]).
+# Pacing defaults (real value comes from style["shot_seconds"]).
 JUMP_CUT_TARGET = 2.4
 MAX_SHOTS = 3
 MIN_SHOT = 1.6
@@ -509,7 +512,7 @@ class ShortsComposer:
             return None
 
     # ============================================================
-    # Legacy caption/CTA helpers (still used for the non-word-caption path)
+    # Legacy caption/CTA helpers
     # ============================================================
     @staticmethod
     def _make_caption_png(text, font_file, font_size=CAPTION_FONT_SIZE):
@@ -684,7 +687,7 @@ class ShortsComposer:
         return output_path
 
     # ============================================================
-    # MAIN - multi-scene Short builder (STYLE-AWARE)
+    # MAIN - multi-scene Short builder (STYLE + TRANSITION AWARE)
     # ============================================================
     def create_multi_scene_short(self, clip_paths, voiceover_paths,
                                   output_filename="final_short.mp4",
@@ -703,7 +706,7 @@ class ShortsComposer:
         global SCENE_GAP
         SCENE_GAP = style.get("scene_gap", SCENE_GAP)
 
-        print("Multi-scene composition START (style applied)")
+        print("Multi-scene composition START (style + transitions applied)")
 
         if not clip_paths or not voiceover_paths:
             raise ValueError("clip_paths ya voiceover_paths empty hain")
@@ -872,13 +875,78 @@ class ShortsComposer:
                 if bg_music is not None:
                     opened_audio.append(bg_music)
 
-            # ---- CONCATENATE ----
-            video = concatenate_videoclips(video_scenes, method="chain")
+            # ============================================================
+            # ---- CONCATENATE (with randomized xfade transitions) ----
+            # ============================================================
+            video = None
+            try:
+                # compute each scene's exact length on the master timeline
+                scene_lens = []
+                for i, (start_t, voice_d) in enumerate(scene_timings):
+                    if i + 1 < len(scene_timings):
+                        scene_lens.append(scene_timings[i + 1][0] - start_t)
+                    else:
+                        scene_lens.append(total_duration - start_t)
 
-            if video.duration and video.duration > total_duration + 0.5:
-                print(f"Final video too long ({video.duration:.2f}s) "
-                      f"- trimming to {total_duration:.2f}s")
+                tmp_scene_dir = os.path.join(self.output_dir, "scene_tmp")
+                os.makedirs(tmp_scene_dir, exist_ok=True)
+                scene_files = []
+                for i, scene_clip in enumerate(video_scenes):
+                    p = os.path.join(tmp_scene_dir, f"scene_{i:02d}.mp4")
+                    scene_clip.write_videofile(
+                        p,
+                        codec="libx264",
+                        audio_codec="aac",
+                        audio_bitrate="192k",
+                        fps=30,
+                        preset="ultrafast",
+                        ffmpeg_params=["-pix_fmt", "yuv420p", "-crf", "17"],
+                        threads=4,
+                        temp_audiofile=os.path.join(tmp_scene_dir, f"ta_{i}.m4a"),
+                        remove_temp=True,
+                        verbose=False,
+                        logger=None,
+                    )
+                    scene_files.append(p)
+
+                if len(scene_files) >= 2:
+                    join_modes = transitions_mod.pick_transitions(
+                        len(scene_files) - 1, style)
+                    xfade_out = os.path.join(self.output_dir, "joined_xfade.mp4")
+                    ok = transitions_mod.apply_transitions_ffmpeg(
+                        scene_files, scene_lens, join_modes,
+                        SCENE_GAP, xfade_out,
+                        transition_time=transitions_mod.pick_duration(style),
+                    )
+                    if ok:
+                        joined = VideoFileClip(xfade_out)
+                        opened_video.append(joined)
+                        video = joined
+                        print("Scenes joined with randomized xfade transitions")
+                    else:
+                        print("xfade stage failed - falling back to plain concat")
+            except Exception as e:
+                print("xfade pipeline error: " + str(e))
+
+            if video is None:
+                print("Using plain concatenate (no transitions)")
+                video = concatenate_videoclips(video_scenes, method="chain")
+
+            # ---- DURATION SAFETY AFTER XFADE ----
+            if video.duration and video.duration > total_duration + 0.05:
+                print(f"Trim after xfade: {video.duration:.2f}s -> {total_duration:.2f}s")
                 video = video.subclip(0, total_duration)
+            elif video.duration and video.duration < total_duration - 0.05:
+                # xfade ate too much - pad with the last frame
+                try:
+                    last_t = max(0.0, video.duration - 0.05)
+                    last_frame = video.get_frame(last_t)
+                    pad_dur = total_duration - video.duration
+                    pad = ImageClip(last_frame).set_duration(pad_dur)
+                    video = concatenate_videoclips([video, pad], method="chain")
+                    print(f"Padded after xfade by {pad_dur:.2f}s")
+                except Exception as e:
+                    print("Pad after xfade failed: " + str(e))
 
             video = video.set_audio(final_audio).set_duration(total_duration)
             print(f"Final video duration: {video.duration:.2f}s")
