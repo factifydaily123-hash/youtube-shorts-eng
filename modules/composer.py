@@ -1,18 +1,18 @@
 """
-Video composer — MoviePy + FFmpeg.
+Video composer - MoviePy + FFmpeg. STYLE-AWARE version.
 
-BUG FIX (this version):
-  Previous code used `.set_duration(fitted.duration)` in _prepare_scene_video().
-  `fitted.duration` returned the ORIGINAL Pexels clip length (15-60s), not the
-  trimmed scene length. Result: 9 scenes × ~62s = ~9 min video instead of ~30s.
+Every render gets a "style" dict (modules.style_variation.get_style) that
+randomizes caption position, hook card position/tilt/colour, end-question
+position, scene rhythm, SFX gains and the final colour grade. This makes each
+video look hand-edited rather than produced from a fixed template, so YouTube's
+reused-content / mass-produced detector does not flag the channel.
 
-  FIX: use `.set_duration(duration)` — the function argument (exact scene length).
-
-Retention features in this version:
-  - Big bold hook card (first 3 seconds)
-  - Word-by-word captions (via modules.captions)
+Features:
+  - Big bold hook card (first 3 s) - position/colour/duration randomized per video
+  - Word-by-word captions (via modules.captions) - position/rotation randomized
   - Slow punch-in zoom on every scene (+12% over duration)
   - Pro audio mix (voice EQ + synthesized SFX + ducked BGM + loudnorm)
+  - Final ffmpeg colour pass (grade / vignette / grain) - parameters randomized
 """
 
 import filecmp
@@ -31,6 +31,7 @@ import moviepy.audio.fx.all as afx
 
 from modules.audio import build_final_audio, INTER_SCENE_PAUSE, get_duration
 from modules import pro_fx
+from modules.style_variation import get_style
 
 TARGET_W = 1080
 TARGET_H = 1920
@@ -51,35 +52,25 @@ CTA_POSITION_RATIO = 0.85
 CTA_START_RATIO = 0.55
 CTA_FADE_DURATION = 0.5
 
-# Pacing: a NEW shot every ~2-3 s. Real different clips are fetched in main.py;
-# this same-footage jump cut is only the fallback when no extra clips exist.
+# Pacing: a NEW shot every ~2-3 s (real value comes from style["shot_seconds"]).
 JUMP_CUT_TARGET = 2.4
 MAX_SHOTS = 3
 MIN_SHOT = 1.6
-PUNCH_STEP = 0.09          # extra zoom on every 2nd shot of a punch-in cut
+PUNCH_STEP = 0.09
 
-# Shot entry effects (every cut gets a tiny "edit" so it feels hand-cut)
-ENTRY_POP = 0.14           # scale kick that settles in ~0.25s
-ENTRY_SHAKE_PX = 14        # camera-shake amplitude
-SHOT_BASE_SCALE = 1.08     # headroom so shake/pan never shows black edges
-SHOT_DRIFT_PX = 36         # slow sideways camera drift over a shot
+# Shot entry effects
+ENTRY_POP = 0.14
+ENTRY_SHAKE_PX = 14
+SHOT_BASE_SCALE = 1.08
+SHOT_DRIFT_PX = 36
 ENTRY_CHOICES = ["pop", "pop", "flash", "shake", None]
 
-# Final colour pass (ffmpeg): subtle contrast/saturation, warmth, sharpen, vignette, grain
-GRADE_VF = (
-    "eq=contrast=1.06:saturation=1.12:brightness=0.01,"
-    "colorbalance=rs=0.02:bs=-0.02:rh=0.02:bh=-0.015,"
-    "unsharp=5:5:0.5:5:5:0.0,"
-    "vignette=angle=PI/6,"
-    "noise=alls=4:allf=t"
-)
-
-# End question (on-screen comment bait, NOT spoken -> loop stays seamless)
+# End question defaults (style overrides per video)
 END_Q_SHOW = 1.7
 END_Q_Y_RATIO = 0.76
 END_Q_FONT_SIZE = 70
 
-# Hook card settings (first 3 seconds)
+# Hook card defaults (style overrides per video)
 HOOK_CARD_DURATION = 3.0
 HOOK_CARD_Y_RATIO = 0.20
 HOOK_CARD_FONT_SIZE = 108
@@ -151,7 +142,7 @@ class ShortsComposer:
 
     @staticmethod
     def _cut_points(duration):
-        """Times (inside a scene) where a jump cut happens: ~1 cut per 1.3s, max 3 shots."""
+        """Times (inside a scene) where a jump cut happens."""
         n = int(round(duration / JUMP_CUT_TARGET))
         n = max(1, min(MAX_SHOTS, n))
         while n > 1 and duration / n < MIN_SHOT:
@@ -160,25 +151,13 @@ class ShortsComposer:
 
     @staticmethod
     def _pick_entry():
-        if pro_fx.ENABLED:          # ffmpeg stage adds kick/shake/flash on every cut
+        if pro_fx.ENABLED:
             return None
         return random.choice(ENTRY_CHOICES)
 
     @staticmethod
     def _zoomed(fitted, duration, gain, zoom_out=False, start_scale=1.0,
                 cuts=None, punch_from_end=False, entry=None, drift=0.0):
-        """
-        Punch-in (or punch-out) zoom on an already 1080x1920 clip.
-
-        cuts           : jump-cut times; the zoom snaps +PUNCH_STEP on every 2nd shot
-                         (a real jump cut on continuous footage, no extra download).
-        punch_from_end : choose the snapped shots so the LAST shot is un-snapped ->
-                         scale at the final frame is exactly the loop scale.
-        entry          : "pop" (scale kick), "shake" (camera shake) or "flash"
-                         (white flash) on the first ~0.3 s of the shot. None = clean.
-        drift          : px of slow sideways pan over the shot (needs start_scale>=1.07
-                         so no black edges show; ignored otherwise).
-        """
         d = max(duration, 0.5)
         cuts = sorted(cuts or [])
         n_seg = len(cuts) + 1
@@ -210,7 +189,7 @@ class ShortsComposer:
         zoomed = fitted.resize(scale)
 
         if entry is None and not drift:
-            zoomed = zoomed.set_position("center")        # exact old behaviour (loop-safe)
+            zoomed = zoomed.set_position("center")
         else:
             sign = random.choice([-1, 1])
 
@@ -245,19 +224,6 @@ class ShortsComposer:
                              zoom_out=False, split=False, cut_log=None,
                              punch_from_end=False, entry=None, drift=0.0,
                              base_scale=1.0):
-        """
-        Returns a clip with EXACTLY `duration` seconds.
-
-        in_point  : start the source at this second (deterministic) - used to
-                    make the video's LAST frame flow into its FIRST frame.
-        zoom_out  : zoom 1.20 -> 1.00 instead of 1.00 -> 1.20 (mirror of the hook's
-                    zoom, so the scale at the loop point matches exactly).
-        split     : cut the scene into 2-3 shots of the same footage (different
-                    time windows, every 2nd mirrored, zoom restarted) -> a visual change
-                    every ~1.3s instead of every ~3s, without extra downloads.
-        cut_log   : list; the cut times (relative to this scene) are appended to it so
-                    the composer can put a whoosh/click under every cut.
-        """
         try:
             clip = VideoFileClip(path, audio=False)
         except Exception as e:
@@ -273,18 +239,15 @@ class ShortsComposer:
         cuts = ShortsComposer._cut_points(duration)
 
         if in_point is not None and src >= in_point + duration + 0.03:
-            # deterministic window (loop continuity)
             clip = clip.subclip(in_point, in_point + duration)
             pinned = True
         elif src < duration + 0.2:
-            # source clip shorter than needed -> loop
             try:
                 clip = clip.fx(vfx.loop, duration=duration + 0.5)
             except Exception as e:
                 clip.close()
                 raise RuntimeError("Loop fail: " + path + ": " + str(e))
         elif split and not shock and duration >= 2.4 and src >= duration + 0.3 and cuts:
-            # 2-3 different windows of the same footage (one per shot)
             bounds = [0.0] + list(cuts) + [duration]
             lens = [bounds[i + 1] - bounds[i] for i in range(len(bounds) - 1)]
             try:
@@ -307,7 +270,6 @@ class ShortsComposer:
                 start = random.uniform(0, spare) if spare > 0.1 else 0.0
                 clip = clip.subclip(start, min(src, start + duration))
         else:
-            # trim from a random in-point to keep things fresh
             spare = max(0.0, src - duration - 0.2)
             start = random.uniform(0, spare) if spare > 0.1 else 0.0
             end = start + duration
@@ -320,7 +282,6 @@ class ShortsComposer:
                 clip.close()
                 raise RuntimeError("Subclip fail: " + path + ": " + str(e))
 
-        # ---- multi-shot scene (jump cuts) ------------------------------------
         if multi_shots is not None:
             try:
                 parts = []
@@ -346,7 +307,6 @@ class ShortsComposer:
 
         fitted = ShortsComposer._fit_vertical(clip)
 
-        # FIRST scene = visual hook: punchier colours + faster punch-in zoom
         zoom_gain = 0.12 if base_scale <= 1.0 else 0.08
         if shock:
             try:
@@ -355,7 +315,6 @@ class ShortsComposer:
             except Exception as e:
                 print("Shock grade skipped: " + str(e))
 
-        # Slow punch-in zoom = constant motion, keeps eyes on screen
         try:
             out = ShortsComposer._zoomed(fitted, duration, zoom_gain, zoom_out=zoom_out,
                                          start_scale=base_scale, cuts=cuts,
@@ -365,14 +324,9 @@ class ShortsComposer:
                 cut_log.extend(cuts)
             return out
         except Exception:
-            # Fallback: hard-force exact duration
             return fitted.set_duration(duration)
 
     def _build_multi_clip_scene(self, paths, duration, cut_log=None):
-        """
-        One scene made of SEVERAL different stock clips (a new picture every ~2-3 s),
-        each shot with its own entry effect + slow camera drift.
-        """
         n = len(paths)
         each = duration / n
         parts = []
@@ -393,14 +347,11 @@ class ShortsComposer:
         return concatenate_videoclips(parts, method="chain").set_duration(duration)
 
     # ============================================================
-    # Big bold hook card for the FIRST 3 SECONDS
+    # Hook card (STYLE-AWARE)
     # ============================================================
-    def _make_hook_card(self, hook_text, duration=HOOK_CARD_DURATION):
-        """
-        Bold yellow title card (e.g. 'THIS FISH HAS A TRANSPARENT HEAD?!').
-        - word-wraps into max 3 lines, shrinking the font until it fits
-        - slides down + fades in (0.18s), fades out at the end
-        """
+    def _make_hook_card(self, hook_text, duration=None, style=None):
+        style = style or {}
+        duration = duration or style.get("hook_duration", HOOK_CARD_DURATION)
         try:
             font_file = self._get_font_file()
             if not font_file or not hook_text:
@@ -427,8 +378,9 @@ class ShortsComposer:
                     lines.append(cur)
                 return lines
 
+            font_size = style.get("hook_font_size", HOOK_CARD_FONT_SIZE)
             font, lines = None, []
-            for size in range(HOOK_CARD_FONT_SIZE, 59, -8):
+            for size in range(int(font_size), 55, -8):
                 try:
                     f = ImageFont.truetype(font_file, size)
                 except Exception:
@@ -448,22 +400,37 @@ class ShortsComposer:
             img_w = min(TARGET_W - 40, max(widths) + pad * 2)
             img_h = sum(heights) + gap * (len(lines) - 1) + pad * 2
 
+            fill = style.get("hook_fill", (0, 0, 0, 200))
+            text_color = style.get("hook_text_color", (255, 235, 59, 255))
+            radius = style.get("hook_radius", 36)
+
             img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
             draw = ImageDraw.Draw(img)
-            draw.rounded_rectangle([0, 0, img_w - 1, img_h - 1], radius=36, fill=(0, 0, 0, 200))
+            if fill[3] > 0:
+                draw.rounded_rectangle([0, 0, img_w - 1, img_h - 1],
+                                       radius=radius, fill=fill)
+            else:
+                # border-only card variant
+                draw.rounded_rectangle([0, 0, img_w - 1, img_h - 1],
+                                       radius=radius, outline=(255, 255, 255, 230),
+                                       width=6)
             y = pad
             for i, ln in enumerate(lines):
                 x = (img_w - widths[i]) // 2 - boxes[i][0]
                 draw.text((x, y - boxes[i][1]), ln, font=font,
-                          fill=(255, 235, 59, 255), stroke_width=stroke,
+                          fill=text_color, stroke_width=stroke,
                           stroke_fill=(0, 0, 0, 255))
                 y += heights[i] + gap
 
-            y0 = int(TARGET_H * HOOK_CARD_Y_RATIO)
+            y0 = int(TARGET_H * style.get("hook_y_ratio", HOOK_CARD_Y_RATIO))
             clip = ImageClip(np.array(img), transparent=True).set_duration(duration).set_start(0)
-            # visible from the very FIRST frame: viewers decide in <1s, a card that
-            # slides/fades in is a card they never read
             clip = clip.set_position(("center", y0))
+            tilt = style.get("hook_tilt", 0)
+            if tilt:
+                try:
+                    clip = clip.rotate(tilt, resample="bilinear", expand=False)
+                except Exception:
+                    pass
             try:
                 clip = clip.crossfadeout(0.25)
             except Exception:
@@ -474,10 +441,10 @@ class ShortsComposer:
             return None
 
     # ============================================================
-    # End question: on-screen comment bait for the last ~1.7s
-    # (text only, never spoken -> the audio still loops seamlessly)
+    # End question (STYLE-AWARE)
     # ============================================================
-    def _make_end_question_overlay(self, text, total_duration, font_file):
+    def _make_end_question_overlay(self, text, total_duration, font_file, style=None):
+        style = style or {}
         try:
             text = " ".join(str(text or "").split()).upper()
             if not text or not font_file or total_duration < 3:
@@ -524,10 +491,13 @@ class ShortsComposer:
                           stroke_fill=(0, 0, 0, 255))
                 y += heights[i] + gap
 
-            start = max(0.0, total_duration - END_Q_SHOW)
+            show = style.get("end_q_duration", END_Q_SHOW)
+            start = max(0.0, total_duration - show)
+            y_ratio = style.get("end_q_y_ratio", END_Q_Y_RATIO)
+
             clip = ImageClip(np.array(img), transparent=True)
             clip = clip.set_start(start).set_duration(total_duration - start)
-            clip = clip.set_position(("center", int(TARGET_H * END_Q_Y_RATIO)))
+            clip = clip.set_position(("center", int(TARGET_H * y_ratio)))
             try:
                 clip = clip.crossfadein(0.15)
             except Exception:
@@ -539,7 +509,7 @@ class ShortsComposer:
             return None
 
     # ============================================================
-    # Caption rendering (PIL)
+    # Legacy caption/CTA helpers (still used for the non-word-caption path)
     # ============================================================
     @staticmethod
     def _make_caption_png(text, font_file, font_size=CAPTION_FONT_SIZE):
@@ -642,7 +612,7 @@ class ShortsComposer:
             return None
 
     # ============================================================
-    # Fallback audio mixer (used only if build_final_audio fails)
+    # Fallback audio mixer
     # ============================================================
     def _add_background_music(self, voice_audio, total_duration, bg_music_path):
         audio_tracks = [voice_audio]
@@ -670,10 +640,18 @@ class ShortsComposer:
             bg_music = None
         return CompositeAudioClip(audio_tracks), bg_music
 
-    @staticmethod
-    def _grade_pass(src, dst):
-        """Final ffmpeg pass: colour grade + vignette + light film grain. Audio is copied."""
-        cmd = ["ffmpeg", "-y", "-i", src, "-vf", GRADE_VF,
+    def _grade_pass(self, src, dst, style=None):
+        """Final ffmpeg pass: colour grade + vignette + light grain. STYLE-AWARE."""
+        style = style or {}
+        vf = (
+            f"eq=contrast={style.get('grade_contrast', 1.06)}:"
+            f"saturation={style.get('grade_saturation', 1.12)}:brightness=0.01,"
+            "colorbalance=rs=0.02:bs=-0.02:rh=0.02:bh=-0.015,"
+            "unsharp=5:5:0.5:5:5:0.0,"
+            f"vignette=angle={style.get('vignette_angle', 'PI/6')},"
+            f"noise=alls={style.get('grain_strength', 4)}:allf=t"
+        )
+        cmd = ["ffmpeg", "-y", "-i", src, "-vf", vf,
                "-c:v", "libx264", "-preset", "veryfast", "-crf", "19",
                "-pix_fmt", "yuv420p", "-movflags", "+faststart",
                "-c:a", "copy", dst]
@@ -681,7 +659,7 @@ class ShortsComposer:
         if r.returncode != 0 or not os.path.exists(dst) or os.path.getsize(dst) < 10000:
             raise RuntimeError("grade pass failed: " + (r.stderr or "")[-600:])
 
-    def _export(self, video_clip, output_filename):
+    def _export(self, video_clip, output_filename, style=None):
         output_path = os.path.join(self.output_dir, output_filename)
         pre_path = output_path[:-4] + ".pre.mp4"
         video_clip.write_videofile(
@@ -697,7 +675,7 @@ class ShortsComposer:
             remove_temp=True,
         )
         try:
-            self._grade_pass(pre_path, output_path)
+            self._grade_pass(pre_path, output_path, style=style)
             os.remove(pre_path)
             print("Colour grade applied")
         except Exception as e:
@@ -706,7 +684,7 @@ class ShortsComposer:
         return output_path
 
     # ============================================================
-    # MAIN — multi-scene Short builder
+    # MAIN - multi-scene Short builder (STYLE-AWARE)
     # ============================================================
     def create_multi_scene_short(self, clip_paths, voiceover_paths,
                                   output_filename="final_short.mp4",
@@ -718,8 +696,14 @@ class ShortsComposer:
                                   word_timings=None,
                                   loop_visual=False,
                                   end_question=None,
-                                  extra_clip_paths=None):
-        print("Multi-scene composition START")
+                                  extra_clip_paths=None,
+                                  style=None):
+        # ---- style fingerprint for this video ----
+        style = style or get_style()
+        global SCENE_GAP
+        SCENE_GAP = style.get("scene_gap", SCENE_GAP)
+
+        print("Multi-scene composition START (style applied)")
 
         if not clip_paths or not voiceover_paths:
             raise ValueError("clip_paths ya voiceover_paths empty hain")
@@ -739,13 +723,9 @@ class ShortsComposer:
         opened_video = []
         timeline = 0.0
         scene_timings = []
-        abs_cut_times = []      # every jump cut on the final timeline -> SFX
+        abs_cut_times = []
 
-        # ---- SEAMLESS VISUAL LOOP PLAN ---------------------------------
-        # Last scene re-uses the hook footage. We make it play the seconds that
-        # come right BEFORE the hook's in-point, zooming 1.20 -> 1.00, so the last
-        # frame of the video flows straight into the first frame (same shot, same
-        # scale, same colour grade) and the replay looks like one endless shot.
+        # ---- SEAMLESS VISUAL LOOP PLAN ----
         loop_ok = False
         hook_in = None
         try:
@@ -798,7 +778,6 @@ class ShortsComposer:
                             cut_log=cut_log, punch_from_end=True
                         )
                     elif extras and 0 < index < count - 1:
-                        # several DIFFERENT clips inside this scene (new shot every ~2-3 s)
                         scene_video = self._build_multi_clip_scene(
                             [clip_path] + extras, scene_duration, cut_log=cut_log)
                     else:
@@ -818,11 +797,9 @@ class ShortsComposer:
                 voice_clips.append(voice.set_start(timeline))
                 timeline += scene_duration
 
-                print(f"Scene {index + 1} ready — dur={scene_duration:.2f}s")
+                print(f"Scene {index + 1} ready - dur={scene_duration:.2f}s")
 
             total_duration = timeline
-            # LOOP ENDING: cut right after the last spoken word (no dead tail), so the
-            # replay jumps straight into the hook.
             last_start, last_voice = scene_timings[-1]
             total_duration = min(timeline, last_start + last_voice + 0.06)
             print(f"TOTAL TIMELINE: {total_duration:.2f}s")
@@ -831,12 +808,11 @@ class ShortsComposer:
                     f"Timeline {total_duration:.0f}s too long for a Short "
                     "(voiceover bug?) - aborting before slow render")
 
-            # SAFETY CHECK: verify video_scenes sum matches total_duration
             scene_sum = sum(float(s.duration or 0) for s in video_scenes)
             print(f"Safety: video_scenes sum = {scene_sum:.2f}s "
                   f"(expected {total_duration:.2f}s)")
             if abs(scene_sum - total_duration) > total_duration * 0.3:
-                print("⚠️ DURATION MISMATCH! Trimming scenes to exact length...")
+                print("DURATION MISMATCH! Trimming scenes to exact length...")
                 trimmed = []
                 for i, (clip, (start_t, voice_d)) in enumerate(
                         zip(video_scenes, scene_timings)):
@@ -851,20 +827,23 @@ class ShortsComposer:
             if not voice_clips:
                 raise RuntimeError("No voice clips ready")
 
-            # ---- SFX EVENTS: whoosh+click on every cut, pop on every text pop-up ----
+            # ---- SFX EVENTS (style-aware gains) ----
             sfx_events = [(t, "cut") for t in abs_cut_times]
             if hook_text or word_scenes:
-                sfx_events.append((0.03, "click"))                  # hook card appears
+                sfx_events.append((0.03, "click"))
             if end_question and total_duration >= 3:
-                sfx_events.append((max(0.0, total_duration - END_Q_SHOW), "click"))
+                sfx_events.append((max(0.0, total_duration -
+                                       style.get("end_q_duration", END_Q_SHOW)), "click"))
             if word_scenes:
                 try:
                     from modules.captions import hero_word_times
                     sfx_events += [(t, "pop") for t in hero_word_times(
-                        word_scenes, scene_timings, total_duration, word_timings)]
+                        word_scenes, scene_timings, total_duration, word_timings,
+                        style=style)]
                 except Exception as e:
                     print("Caption pop SFX skipped: " + str(e))
-            print("SFX events: " + str(len(sfx_events)) + " (" + str(len(abs_cut_times)) + " jump cuts)")
+            print("SFX events: " + str(len(sfx_events)) +
+                  " (" + str(len(abs_cut_times)) + " jump cuts)")
 
             # ---- AUDIO MASTER ----
             try:
@@ -875,6 +854,7 @@ class ShortsComposer:
                     bg_music_path,
                     out_dir=os.path.join(self.output_dir, "mix"),
                     sfx_events=sfx_events,
+                    style=style,
                 )
                 master_clip = AudioFileClip(master_path)
                 opened_audio.append(master_clip)
@@ -895,17 +875,15 @@ class ShortsComposer:
             # ---- CONCATENATE ----
             video = concatenate_videoclips(video_scenes, method="chain")
 
-            # FORCE final duration = total_duration (safety)
             if video.duration and video.duration > total_duration + 0.5:
-                print(f"⚠️ Final video too long ({video.duration:.2f}s) "
-                      f"— trimming to {total_duration:.2f}s")
+                print(f"Final video too long ({video.duration:.2f}s) "
+                      f"- trimming to {total_duration:.2f}s")
                 video = video.subclip(0, total_duration)
 
             video = video.set_audio(final_audio).set_duration(total_duration)
             print(f"Final video duration: {video.duration:.2f}s")
 
-            # ---- PRO FX (ffmpeg): hook push-in/glitch + per-cut kick/shake/blur/flash ----
-            # runs on the picture only, BEFORE captions, so text stays sharp and steady
+            # ---- PRO FX stage ----
             if pro_fx.ENABLED:
                 try:
                     base_tmp = os.path.join(self.output_dir, "base_nofx.mov")
@@ -918,7 +896,8 @@ class ShortsComposer:
                         remove_temp=True,
                     )
                     cut_times = [t0 for t0, _d in scene_timings[1:]] + list(abs_cut_times)
-                    if pro_fx.apply_pro_fx(base_tmp, fx_tmp, cut_times, total_duration, hook=True):
+                    if pro_fx.apply_pro_fx(base_tmp, fx_tmp, cut_times, total_duration,
+                                           hook=True, style=style):
                         fx_clip = VideoFileClip(fx_tmp)
                         opened_video.append(fx_clip)
                         video = fx_clip.set_duration(total_duration)
@@ -929,7 +908,7 @@ class ShortsComposer:
 
             overlays = []
 
-            # ---- HOOK CARD (first 3 seconds) ----
+            # ---- HOOK CARD ----
             try:
                 hook_source = (hook_text or "").strip()
                 if not hook_source and word_scenes:
@@ -939,20 +918,21 @@ class ShortsComposer:
                             word_scenes[0].get("narration", "").split()[:6]
                         )
                 if hook_source:
-                    hook_card = self._make_hook_card(hook_source, HOOK_CARD_DURATION)
+                    hook_card = self._make_hook_card(hook_source, style=style)
                     if hook_card is not None:
                         overlays.append(hook_card)
-                        print("Hook card added (first 3s): " + hook_source)
+                        print("Hook card added: " + hook_source)
             except Exception as e:
                 print("Hook card failed: " + str(e))
 
-            # ---- WORD-BY-WORD CAPTIONS ----
+            # ---- WORD-BY-WORD CAPTIONS (style-aware) ----
             if word_scenes:
                 try:
                     from modules.captions import build_word_caption_clips
                     overlays.extend(build_word_caption_clips(
                         word_scenes, scene_timings, total_duration,
                         word_timings=word_timings,
+                        style=style,
                     ))
                 except Exception as e:
                     print("Word captions failed: " + str(e))
@@ -966,9 +946,10 @@ class ShortsComposer:
                     if caption is not None:
                         overlays.append(caption)
 
-            # ---- END QUESTION (last 1.7s, on-screen only) ----
+            # ---- END QUESTION ----
             if end_question and font_file:
-                eq = self._make_end_question_overlay(end_question, total_duration, font_file)
+                eq = self._make_end_question_overlay(end_question, total_duration,
+                                                     font_file, style=style)
                 if eq is not None:
                     overlays.append(eq)
 
@@ -987,7 +968,7 @@ class ShortsComposer:
                 except Exception as e:
                     print("Overlay compose fail: " + str(e))
 
-            output_path = self._export(video, output_filename)
+            output_path = self._export(video, output_filename, style=style)
 
             try:
                 video.close()
