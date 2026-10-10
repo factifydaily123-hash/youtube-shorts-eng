@@ -428,7 +428,7 @@ def build_word_caption_clips(scenes, scene_timings, total_duration,
         clip = ImageClip(np.array(frame), transparent=True).set_start(t0).set_duration(dur)
         y = int(TARGET_H * y_ratio - frame.height / 2)
         if x_jit:
-            x = int(TARGET_W // 2 + x_jit - frame.shape[1] / 2)
+            x = int(TARGET_W // 2 + x_jit - frame.width / 2)
             clip = clip.set_position((x, y))
         else:
             clip = clip.set_position(("center", y))
