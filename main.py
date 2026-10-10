@@ -20,6 +20,7 @@ from modules.asset_manager import fetch_scene_video, fetch_extra_clips, footage_
 from modules import audio as audio_mod
 from modules.audio import generate_voiceover, load_word_timings, get_duration
 from modules.brain import generate_script, record_history
+from modules.style_variation import get_style
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
@@ -42,9 +43,9 @@ USED_TOPICS_FILE = "used_topics.json"
 ENABLE_CAPTIONS = os.getenv("ENABLE_CAPTIONS", "0") == "1"
 WORD_CAPTIONS = os.getenv("WORD_CAPTIONS", "1") == "1"
 HOOK_CAPTION = os.getenv("HOOK_CAPTION", "1") == "1"
-# last scene re-uses the hook footage -> visual loop (replay feels continuous)
 LOOP_VISUAL = os.getenv("LOOP_VISUAL", "1") == "1"
-# a NEW stock clip roughly every SHOT_SECONDS (2-3 s feels like human editing)
+
+# Fallback shot length if style does not override (it always does now).
 SHOT_SECONDS = float(os.getenv("SHOT_SECONDS", "2.0"))
 MAX_SHOTS_PER_SCENE = 3
 MIN_SHOT_LEN = 1.4
@@ -101,14 +102,7 @@ def notify_telegram(message: str):
 
 
 def _scene_prosody(index, total):
-    """
-    Voice energy curve (index is 1-based), HUMAN pace (~1.0-1.09x):
-      hook      -> a bit faster + higher pitch
-      payoff    -> slower + lower pitch (weight, so the answer lands)
-      loop line -> quick, rolls straight back into the hook
-      others    -> small random variation so it never sounds like a metronome
-    Kokoro uses the % as speed (1 + pct/100); Edge-TTS uses it as `rate`.
-    """
+    """Voice energy curve, human pace (~1.0-1.09x)."""
     if index == 1:
         return "+9%", "+3Hz"
     if total >= 4 and index == total - 1:
@@ -145,11 +139,6 @@ def _voices_with_engine(scenes, audio_dir, engine):
 
 
 def build_scene_voiceovers(scenes, audio_dir):
-    """
-    ONE engine for the whole video (a voice that changes mid-video sounds fake):
-    try Kokoro first (natural); if any scene fails, redo ALL scenes with Edge-TTS.
-    Silence is trimmed and real word timings are saved next to each mp3.
-    """
     pref = (audio_mod.TTS_ENGINE or "auto").lower()
     if pref in ("auto", "kokoro") and audio_mod.kokoro_available():
         try:
@@ -167,19 +156,20 @@ def build_scene_voiceovers(scenes, audio_dir):
     return paths
 
 
-def build_scene_clips(script, clip_dir, voice_paths):
+def build_scene_clips(script, clip_dir, voice_paths, style):
     """
-    One clip per scene, ALWAYS tied to the script's subject:
-    scene keyword -> fallback keyword -> subject -> visual_domain -> exact-subject AI image.
+    One clip per scene, ALWAYS tied to the script's subject.
+    Uses style["shot_seconds"] to decide how many extra clips to fetch per scene.
     """
     scenes = script["scenes"]
     subject = script.get("subject", "")
     domain = script.get("visual_domain", [])
+    shot_seconds = style.get("shot_seconds", SHOT_SECONDS)
 
     shutil.rmtree(clip_dir, ignore_errors=True)
     os.makedirs(clip_dir, exist_ok=True)
     paths = []
-    extras = []            # extras[i] = additional clips (different shots) for scene i
+    extras = []
     last = len(scenes)
     for index, scene in enumerate(scenes, start=1):
         extras.append([])
@@ -187,7 +177,6 @@ def build_scene_clips(script, clip_dir, voice_paths):
         keyword = scene.get("search_keyword") or subject
         print(f"Scene {index}: '{keyword}' (subject: '{subject}')")
 
-        # visual loop: closing scene shows the hook subject again
         if LOOP_VISUAL and index == last and last >= 3 and paths:
             shutil.copy(paths[0], target)
             print("Scene %d: re-using hook footage for a visual loop" % index)
@@ -197,8 +186,6 @@ def build_scene_clips(script, clip_dir, voice_paths):
         dur = get_duration(voice_paths[index - 1]) if index - 1 < len(voice_paths) else 3.0
         min_dur = max(3, int(math.ceil(dur)))
         if index == 1 and LOOP_VISUAL and len(voice_paths) >= 3:
-            # hook footage is reused for the loop ending: it needs room BEFORE the
-            # hook's in-point (last scene plays the seconds that precede the hook)
             tail = get_duration(voice_paths[-1])
             min_dur = min(9, max(min_dur, int(math.ceil(dur + tail + 0.7))))
         try:
@@ -217,14 +204,13 @@ def build_scene_clips(script, clip_dir, voice_paths):
             print(f"Scene {index} ka clip nahi mila: {e}")
             if not paths:
                 raise
-            paths.append(paths[0])      # hook footage = on-subject by definition
+            paths.append(paths[0])
             continue
 
-        # middle scenes: more than one real clip when the sentence is long enough
-        # (hook + loop scenes keep ONE clip so the seamless loop stays intact)
         if 1 < index < last:
             scene_len = dur + 0.05
-            n_shots = max(1, min(MAX_SHOTS_PER_SCENE, int(round(scene_len / SHOT_SECONDS))))
+            n_shots = max(1, min(MAX_SHOTS_PER_SCENE,
+                                 int(round(scene_len / shot_seconds))))
             while n_shots > 1 and scene_len / n_shots < MIN_SHOT_LEN:
                 n_shots -= 1
             if n_shots > 1:
@@ -239,7 +225,8 @@ def build_scene_clips(script, clip_dir, voice_paths):
                     print(f"Scene {index}: extra clips skipped: {e}")
                     extras[-1] = []
     total_shots = sum(1 + len(x) for x in extras)
-    print(f"Shots in video: {total_shots} clips for {len(scenes)} scenes")
+    print(f"Shots in video: {total_shots} clips for {len(scenes)} scenes "
+          f"(shot_seconds={shot_seconds})")
     return paths, extras
 
 
@@ -330,6 +317,9 @@ def run_pipeline(channel: dict) -> bool:
     print(f"  Starting pipeline for {name}")
     print(f"{'='*60}\n")
 
+    # ---- STYLE FINGERPRINT: one per video, unique on every run ----
+    style = get_style()
+
     ch_audio_dir = TEMP_AUDIO_DIR
     ch_clip_dir = SCENE_CLIP_DIR
     ch_output_dir = OUTPUT_DIR
@@ -350,7 +340,6 @@ def run_pipeline(channel: dict) -> bool:
         if ok:
             script = candidate
             break
-        # no good pictures for this topic -> remember it as used so it is not re-picked
         record_history(USED_TOPICS_FILE, candidate)
         fallback = candidate
     if script is None and fallback is not None:
@@ -380,7 +369,8 @@ def run_pipeline(channel: dict) -> bool:
 
     print(f"\n[{name}] Downloading stock clips...")
     try:
-        clip_paths, extra_clip_paths = build_scene_clips(script, ch_clip_dir, voice_paths)
+        clip_paths, extra_clip_paths = build_scene_clips(script, ch_clip_dir,
+                                                         voice_paths, style)
     except Exception as e:
         msg = f"[{name}] Video download failed: {e}"
         print(msg)
@@ -431,6 +421,7 @@ def run_pipeline(channel: dict) -> bool:
             word_timings=[load_word_timings(p) for p in voice_paths],
             loop_visual=LOOP_VISUAL,
             end_question=script.get("end_question"),
+            style=style,
         )
     except Exception as e:
         msg = f"[{name}] Composition failed: {e}"
