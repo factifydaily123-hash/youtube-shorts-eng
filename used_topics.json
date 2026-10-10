@@ -639,6 +639,18 @@
       "subject_key": "childhood learn",
       "fact": "Praising a child's effort, rather than their innate intelligence, fosters a growth mindset and encourages them to embrace challenges, leading to more effective learning.",
       "fingerprint": "intelligence resilience childhood different effective actually challeng encourag ability embrace failure instead mindset effort foster growth innate praise rather avoid"
+    },
+    {
+      "date": "2026-10-10T21:39:48",
+      "category": "sleep, dreams and tiredness: what they do to mood and behaviour",
+      "format": "mystery_explained",
+      "hook_style": "direct_question",
+      "loop_style": "mirror_loop",
+      "title": "Why You Get SO Emotional When Sleepy 😴",
+      "subject": "emotional regulation",
+      "subject_key": "emotional regulation",
+      "fact": "Sleep deprivation impairs the prefrontal cortex, leading to heightened emotional reactivity and difficulty regulating mood.",
+      "fingerprint": "deprivation difficulty prefrontal reactivity regulation emotional function heighten suddenly emotion fatigue general offline regulat struggl totally without cortex easily enough"
     }
   ]
 }
