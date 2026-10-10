@@ -579,6 +579,42 @@
       "subject_key": "pric psychology",
       "fact": "The first price you see for an item creates an 'anchor' that subconsciously influences your perception of its true value.",
       "fingerprint": "subconsciously ridiculously incredible manipulate perception psychology expensive superglue actually decision influenc initial anchor mental number second alway becom brain creat"
+    },
+    {
+      "date": "2026-10-10T07:45:57",
+      "category": "emotions, mood, stress and how people react to them",
+      "format": "myth_vs_truth",
+      "hook_style": "impossible_claim",
+      "loop_style": "answer_loop",
+      "title": "Your Thoughts Can Make You PHYSICALLY Cold! 🥶",
+      "subject": "emotional temperature",
+      "subject_key": "emotional temperature",
+      "fact": "Thinking about social rejection can cause a measurable drop in body temperature, linking emotional pain to physical coldness.",
+      "fingerprint": "temperature measurable physically emotional rejection actually physical response activat certain coldnes similar thought actual region social brain cause think weird"
+    },
+    {
+      "date": "2026-10-10T07:46:36",
+      "category": "decision making, cognitive biases and why smart people make silly choices",
+      "format": "personal_what_if",
+      "hook_style": "number_shock",
+      "loop_style": "lead_in_loop",
+      "title": "Why You Finish Bad Movies 🎬",
+      "subject": "sunk cost fallacy",
+      "subject_key": "cost fallacy sunk",
+      "fact": "The sunk cost fallacy causes individuals to continue investing in a failing endeavor because of resources already committed, rather than admitting the past investment was a loss.",
+      "fingerprint": "individual investment continue endeavor terrible already exactly fallacy justify previou resourc commit effort finish invest rather admit avoid brain watch"
+    },
+    {
+      "date": "2026-10-10T07:48:07",
+      "category": "everyday human behaviour: why people do small things in daily life (phone, friends, family, work)",
+      "format": "top3",
+      "hook_style": "you_scenario",
+      "loop_style": "answer_loop",
+      "title": "Why You Check Your Phone (It's Wild!) 🤯",
+      "subject": "phone checking habit",
+      "subject_key": "check habit phone",
+      "fact": "The brain misinterprets sensory signals or habits as phone notifications, causing you to constantly check for imagined alerts due to a dopamine-driven reward loop.",
+      "fingerprint": "misinterpret notification constantly sensation vibration dopamine powerful phantom sensory without driven imagin people reason reward signal alert brain check habit"
     }
   ]
 }
