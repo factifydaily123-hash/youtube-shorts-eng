@@ -627,6 +627,18 @@
       "subject_key": "motivation psychology",
       "fact": "The Zeigarnik effect causes our brains to remember incomplete tasks more vividly, creating mental tension that apps exploit to keep users engaged.",
       "fingerprint": "incomplete motivation psychology zeigarnik actively remember unfinish against exploit tension vividly effect mental obsess reward strong alway brain crave creat"
+    },
+    {
+      "date": "2026-10-10T10:09:09",
+      "category": "childhood, learning and curiosity: how people learn and why praise/habits stick",
+      "format": "myth_vs_truth",
+      "hook_style": "contradiction",
+      "loop_style": "answer_loop",
+      "title": "Praising Kids WRONG Way? 🤯",
+      "subject": "childhood learning",
+      "subject_key": "childhood learn",
+      "fact": "Praising a child's effort, rather than their innate intelligence, fosters a growth mindset and encourages them to embrace challenges, leading to more effective learning.",
+      "fingerprint": "intelligence resilience childhood different effective actually challeng encourag ability embrace failure instead mindset effort foster growth innate praise rather avoid"
     }
   ]
 }
