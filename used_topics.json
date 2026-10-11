@@ -675,6 +675,42 @@
       "subject_key": "secret shar",
       "fact": "Sharing personal secrets significantly deepens trust and emotional connection between friends.",
       "fingerprint": "significantly connection emotional personal between exactly private someone special deepen friend secret someth strong build creat other risky think trust"
+    },
+    {
+      "date": "2026-10-11T23:11:54",
+      "category": "psychology of first impressions, attraction and body language (only well-established findings)",
+      "format": "personal_what_if",
+      "hook_style": "impossible_claim",
+      "loop_style": "answer_loop",
+      "title": "Your Brain LOVES This One Mistake! 💡",
+      "subject": "likeability perception",
+      "subject_key": "likeability perception",
+      "fact": "The Pratfall Effect describes how a highly competent individual's attractiveness can increase after making a minor blunder, as it makes them appear more relatable and human.",
+      "fingerprint": "attractivenes flawlessnes likeability incredibly individual perception competent intimidat relatable actually increase pratfall blunder describ humaniz imagine mistake perfect someone surpris"
+    },
+    {
+      "date": "2026-10-11T23:12:32",
+      "category": "memory: why we forget, false memories, why we remember some things forever",
+      "format": "mystery_explained",
+      "hook_style": "warning",
+      "loop_style": "lead_in_loop",
+      "title": "Your Brain DELETES Memories While You Sleep! 🤯",
+      "subject": "memory pruning",
+      "subject_key": "memory prun",
+      "fact": "During sleep, the brain actively prunes less important memories and neural connections to strengthen vital ones, optimizing memory storage and recall.",
+      "fingerprint": "information connection strengthen essential important actively stronger exactly optimiz storage detail forget memory neural recall simply vanish alway brain delet"
+    },
+    {
+      "date": "2026-10-11T23:15:20",
+      "category": "shopping, money and attention psychology: why we buy, scroll and get hooked",
+      "format": "shocking_fact",
+      "hook_style": "number_shock",
+      "loop_style": "mirror_loop",
+      "title": "Too Many Choices? Your Brain Stops Buying! 🤯",
+      "subject": "decision paralysis",
+      "subject_key": "decision paralysi",
+      "fact": "When presented with too many options, people often experience 'choice paralysis' or 'decision fatigue,' leading them to avoid making any decision or purchase.",
+      "fingerprint": "experience impossible overwhelm decision overload paralysi purchase fatigue present choice mental option people twenty avoid brain choic choos often weird"
     }
   ]
 }
