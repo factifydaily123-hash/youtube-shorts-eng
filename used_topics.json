@@ -723,6 +723,42 @@
       "subject_key": "emotion rumination",
       "fact": "Constantly replaying negative past events, known as rumination, actually solidifies and strengthens those negative emotional pathways in the brain.",
       "fingerprint": "constantly discomfort rumination strengthen emotional actually negative solidify cringey emotion exactly feeling hardwir pathway deeper hidden memory mental moment relive"
+    },
+    {
+      "date": "2026-10-12T20:13:36",
+      "category": "social psychology: crowds, conformity, persuasion, why we copy others",
+      "format": "myth_vs_truth",
+      "hook_style": "payoff_promise",
+      "loop_style": "answer_loop",
+      "title": "🤯 Crowds Make You INVISIBLE?!",
+      "subject": "bystander effect",
+      "subject_key": "bystander effect",
+      "fact": "The more people who witness an emergency, the less likely any single person is to help, due to diffusion of responsibility, a phenomenon known as the Bystander Effect.",
+      "fingerprint": "responsibility phenomenon bystander diffusion emergency invisible actually decrease everyone someone witness anyone chance effect expect likely people person single witnes"
+    },
+    {
+      "date": "2026-10-12T20:15:02",
+      "category": "everyday human behaviour: why people do small things in daily life (phone, friends, family, work)",
+      "format": "top3",
+      "hook_style": "contradiction",
+      "loop_style": "lead_in_loop",
+      "title": "Why that song gets stuck in your head! 🤯",
+      "subject": "earworms",
+      "subject_key": "earworm",
+      "fact": "Earworms are a cognitive phenomenon where a catchy tune gets stuck in your head, often an attempt by your brain to process incomplete auditory information or deal with low cognitive load.",
+      "fingerprint": "information incomplete phenomenon cognitive actually auditory complete distract attempt boredom earworm exactly thought trigger catchy proces simple brain often puzzl"
+    },
+    {
+      "date": "2026-10-12T20:16:58",
+      "category": "sleep, dreams and tiredness: what they do to mood and behaviour",
+      "format": "mystery_explained",
+      "hook_style": "impossible_claim",
+      "loop_style": "mirror_loop",
+      "title": "Your Brain Can Sleep While You're Awake! 🤯",
+      "subject": "microsleeps",
+      "subject_key": "microsleep",
+      "fact": "Extreme tiredness can cause 'microsleeps' where the brain briefly shuts down for seconds, even with eyes open, as a defense mechanism against exhaustion.",
+      "fingerprint": "exhaustion microsleep literally mechanism tirednes against briefly defense extreme happen second awake brain cause fight sleep total weird where down"
     }
   ]
 }
