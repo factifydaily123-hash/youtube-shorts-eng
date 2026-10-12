@@ -783,6 +783,18 @@
       "subject_key": "lonelines psychology",
       "fact": "Loneliness is a perceived lack of meaningful social connection, not simply being physically alone.",
       "fingerprint": "relationship connection meaningful physically psychology lonelines presence surround believe perceiv sometim lonely measur people reason simply social alone being brain"
+    },
+    {
+      "date": "2026-10-12T23:34:32",
+      "category": "psychology of habits, procrastination, motivation and willpower",
+      "format": "top3",
+      "hook_style": "direct_question",
+      "loop_style": "lead_in_loop",
+      "title": "Why Mondays Feel Different? 🗓️",
+      "subject": "fresh start effect",
+      "subject_key": "effect fresh start",
+      "fact": "We are more likely to start new habits and pursue goals during 'fresh start' moments because they create a psychological break from past failures, boosting motivation.",
+      "fingerprint": "psychological motivation different actually landmark temporal capable exactly motivat belief better change create effect failur likely mistak moment monday pursue"
     }
   ]
 }
