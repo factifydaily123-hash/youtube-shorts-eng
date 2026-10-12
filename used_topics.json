@@ -759,6 +759,30 @@
       "subject_key": "microsleep",
       "fact": "Extreme tiredness can cause 'microsleeps' where the brain briefly shuts down for seconds, even with eyes open, as a defense mechanism against exhaustion.",
       "fingerprint": "exhaustion microsleep literally mechanism tirednes against briefly defense extreme happen second awake brain cause fight sleep total weird where down"
+    },
+    {
+      "date": "2026-10-12T20:38:56",
+      "category": "decision making, cognitive biases and why smart people make silly choices",
+      "format": "shocking_fact",
+      "hook_style": "you_scenario",
+      "loop_style": "lead_in_loop",
+      "title": "Why Your Brain Ignores Evidence 🤔",
+      "subject": "confirmation bias",
+      "subject_key": "bia confirmation",
+      "fact": "Confirmation bias is the tendency to search for, interpret, favor, and recall information in a way that confirms one's pre-existing beliefs or hypotheses.",
+      "fingerprint": "confirmation information contradict interpret actively evidence hypothes strongly tendency already believe confirm exactly opinion support belief ignore really recall search"
+    },
+    {
+      "date": "2026-10-12T20:39:25",
+      "category": "friendship, relationships, texting, jealousy and loneliness (well-established findings only)",
+      "format": "myth_vs_truth",
+      "hook_style": "payoff_promise",
+      "loop_style": "answer_loop",
+      "title": "The shocking truth about loneliness 🧠",
+      "subject": "loneliness psychology",
+      "subject_key": "lonelines psychology",
+      "fact": "Loneliness is a perceived lack of meaningful social connection, not simply being physically alone.",
+      "fingerprint": "relationship connection meaningful physically psychology lonelines presence surround believe perceiv sometim lonely measur people reason simply social alone being brain"
     }
   ]
 }
