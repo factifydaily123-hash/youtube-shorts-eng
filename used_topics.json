@@ -795,6 +795,18 @@
       "subject_key": "effect fresh start",
       "fact": "We are more likely to start new habits and pursue goals during 'fresh start' moments because they create a psychological break from past failures, boosting motivation.",
       "fingerprint": "psychological motivation different actually landmark temporal capable exactly motivat belief better change create effect failur likely mistak moment monday pursue"
+    },
+    {
+      "date": "2026-10-13T23:44:26",
+      "category": "memory: why we forget, false memories, why we remember some things forever",
+      "format": "mystery_explained",
+      "hook_style": "impossible_claim",
+      "loop_style": "answer_loop",
+      "title": "Your Brain Plays A Cruel Trick 🧠",
+      "subject": "memory retrieval",
+      "subject_key": "memory retrieval",
+      "fact": "The 'tip-of-the-tongue' phenomenon occurs when the brain has stored information but temporarily cannot access the retrieval pathways, creating a feeling of knowing without being able to recall.",
+      "fingerprint": "information temporarily phenomenon intensely retrieval pathway without cannot memory recall tongue acces aloud annoy being block brain creat cruel occur"
     }
   ]
 }
