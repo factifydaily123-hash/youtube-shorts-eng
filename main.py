@@ -21,6 +21,7 @@ from modules import audio as audio_mod
 from modules.audio import generate_voiceover, load_word_timings, get_duration
 from modules.brain import generate_script, record_history
 from modules.style_variation import get_style
+from modules.post_schedule import mark_posted
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
@@ -456,6 +457,10 @@ def run_pipeline(channel: dict) -> bool:
         )
         print(f"[{name}] Video uploaded! ID: {video_id}")
         print(f"https://youtube.com/shorts/{video_id}")
+
+        # Record today's post IMMEDIATELY so the hourly gate never fires again today,
+        # even if thumbnail/playlist/telegram steps below fail.
+        mark_posted(video_id)
 
         if os.path.exists(thumb_path):
             set_thumbnail(
