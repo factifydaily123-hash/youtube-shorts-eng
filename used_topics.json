@@ -831,6 +831,42 @@
       "subject_key": "dilation pupil",
       "fact": "Dilated pupils are unconsciously perceived as more attractive and trustworthy because they signal interest or arousal.",
       "fingerprint": "trustworthines unconsciously trustworthy attraction attractive especially dilation interest arousal everyth perceiv process someone facial faster hidden reveal signal subtle brain"
+    },
+    {
+      "date": "2026-10-15T17:49:06",
+      "category": "social psychology: crowds, conformity, persuasion, why we copy others",
+      "format": "top3",
+      "hook_style": "number_shock",
+      "loop_style": "mirror_loop",
+      "title": "Why You Copy Strangers So Fast! 👯‍♀️",
+      "subject": "behavioral contagion",
+      "subject_key": "behavioral contagion",
+      "fact": "Humans unconsciously mimic the behaviors of others in a group, often without realizing why, due to social contagion.",
+      "fingerprint": "unconsciously behavioral unconsciou contagion behavior reaction shortcut stranger someone without deeper follow glance prepar realiz second simple social useful assum"
+    },
+    {
+      "date": "2026-10-15T17:49:52",
+      "category": "emotions, mood, stress and how people react to them",
+      "format": "myth_vs_truth",
+      "hook_style": "you_scenario",
+      "loop_style": "lead_in_loop",
+      "title": "Your Smile Makes You Sad?! 😟",
+      "subject": "facial feedback",
+      "subject_key": "facial feedback",
+      "fact": "Forcing a smile doesn't always improve mood; if the smile is perceived as involuntary or forced by external pressure, it can worsen emotional state, whereas a self-motivated smile can genuinely uplift spirits.",
+      "fingerprint": "psychological inauthentic involuntary suppression motivation emotional genuinely external feedback internal pressure genuine improve motivat perceiv surpris chosen facial people spirit"
+    },
+    {
+      "date": "2026-10-15T17:53:36",
+      "category": "childhood, learning and curiosity: how people learn and why praise/habits stick",
+      "format": "mystery_explained",
+      "hook_style": "impossible_claim",
+      "loop_style": "answer_loop",
+      "title": "Why Rewards Can Ruin Your Hobbies 😱",
+      "subject": "intrinsic motivation",
+      "subject_key": "intrinsic motivation",
+      "fact": "The overjustification effect demonstrates how external rewards can decrease intrinsic motivation for activities previously enjoyed.",
+      "fingerprint": "overjustification demonstrat motivation previously intrinsic activity attribut decrease diminish evaluate external favorite interest weirdest destroy purpose effect purely reward brain"
     }
   ]
 }
