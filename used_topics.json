@@ -867,6 +867,42 @@
       "subject_key": "intrinsic motivation",
       "fact": "The overjustification effect demonstrates how external rewards can decrease intrinsic motivation for activities previously enjoyed.",
       "fingerprint": "overjustification demonstrat motivation previously intrinsic activity attribut decrease diminish evaluate external favorite interest weirdest destroy purpose effect purely reward brain"
+    },
+    {
+      "date": "2026-10-16T17:19:51",
+      "category": "sleep, dreams and tiredness: what they do to mood and behaviour",
+      "format": "top3",
+      "hook_style": "direct_question",
+      "loop_style": "lead_in_loop",
+      "title": "Why Do Dreams Affect Your Whole Day? 😴",
+      "subject": "dream influence",
+      "subject_key": "dream influence",
+      "fact": "Dreams can subtly influence your mood, perceptions, and decisions for hours after you wake up.",
+      "fingerprint": "frustration confidence perception influence irritable sensitive actually decision positive emotion exactly action affect notice rarely subtly boost brain carry dream"
+    },
+    {
+      "date": "2026-10-16T17:22:21",
+      "category": "friendship, relationships, texting, jealousy and loneliness (well-established findings only)",
+      "format": "shocking_fact",
+      "hook_style": "payoff_promise",
+      "loop_style": "mirror_loop",
+      "title": "Your Brain Lies When You're Jealous! 🧠",
+      "subject": "jealousy perception",
+      "subject_key": "jealousy perception",
+      "fact": "When people feel jealous, their brain often misinterprets innocent social interactions from partners or friends as more threatening than they actually are.",
+      "fingerprint": "interpretation misinterpret interaction perception exaggerat actually betrayal innocent jealousy suddenly threaten believe harmles hostile partner perceiv strange betray friend jealou"
+    },
+    {
+      "date": "2026-10-16T17:25:59",
+      "category": "decision making, cognitive biases and why smart people make silly choices",
+      "format": "personal_what_if",
+      "hook_style": "stop_doing",
+      "loop_style": "lead_in_loop",
+      "title": "Why Trust Your Gut So Much? 🧠",
+      "subject": "overconfidence bias",
+      "subject_key": "bia overconfidence",
+      "fact": "Your brain often overestimates how certain you are, leading you to filter out contradictory information and make poor decisions due to overconfidence bias.",
+      "fingerprint": "overconfidence contradictory information overestimat constantly certainty cognitive experienc decision illusion certain exactly filter people really brain choic often right smart"
     }
   ]
 }
