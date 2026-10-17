@@ -903,6 +903,42 @@
       "subject_key": "bia overconfidence",
       "fact": "Your brain often overestimates how certain you are, leading you to filter out contradictory information and make poor decisions due to overconfidence bias.",
       "fingerprint": "overconfidence contradictory information overestimat constantly certainty cognitive experienc decision illusion certain exactly filter people really brain choic often right smart"
+    },
+    {
+      "date": "2026-10-17T19:09:11",
+      "category": "memory: why we forget, false memories, why we remember some things forever",
+      "format": "mystery_explained",
+      "hook_style": "impossible_claim",
+      "loop_style": "mirror_loop",
+      "title": "Your clearest memories are often wrong 🤯",
+      "subject": "vivid memories",
+      "subject_key": "memory vivid",
+      "fact": "Our most vivid, emotional memories often feel perfectly accurate, but are frequently reconstructed and can contain significant errors or distortions.",
+      "fingerprint": "reconstruct significant distortion frequently emotional perfectly accurate clearest original contain emotion feeling preserv detail memory recall subtly blend brain chang"
+    },
+    {
+      "date": "2026-10-17T19:10:17",
+      "category": "psychology of habits, procrastination, motivation and willpower",
+      "format": "top3",
+      "hook_style": "why_want",
+      "loop_style": "lead_in_loop",
+      "title": "Why Your Brain Loves Procrastinating! 🧠",
+      "subject": "procrastination psychology",
+      "subject_key": "procrastination psychology",
+      "fact": "Your brain's inherent drive to conserve energy creates 'activation energy,' making initial effort for new tasks feel disproportionately hard, often leading it to prefer familiar, even negative, routines over beneficial change.",
+      "fingerprint": "disproportionately procrastination procrastinate procrastinat activation beneficial psychology conserve familiar inherent negative exactly initial surpris change effort energy prefer routin alway"
+    },
+    {
+      "date": "2026-10-17T19:13:26",
+      "category": "psychology of first impressions, attraction and body language (only well-established findings)",
+      "format": "personal_what_if",
+      "hook_style": "contradiction",
+      "loop_style": "answer_loop",
+      "title": "Your First Impression Is Rigged! 🧠",
+      "subject": "first impressions bias",
+      "subject_key": "bia first impression",
+      "fact": "The Halo Effect causes physical attractiveness to bias our perception of other positive traits like intelligence, kindness, and honesty in initial judgments.",
+      "fingerprint": "attractivenes automatically intelligence assumption impression perception influenc judgment physical positive heavily honesty initial instant kindnes surpris thought without effect factor"
     }
   ]
 }
