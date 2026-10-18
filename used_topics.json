@@ -939,6 +939,42 @@
       "subject_key": "bia first impression",
       "fact": "The Halo Effect causes physical attractiveness to bias our perception of other positive traits like intelligence, kindness, and honesty in initial judgments.",
       "fingerprint": "attractivenes automatically intelligence assumption impression perception influenc judgment physical positive heavily honesty initial instant kindnes surpris thought without effect factor"
+    },
+    {
+      "date": "2026-10-18T23:35:36",
+      "category": "everyday human behaviour: why people do small things in daily life (phone, friends, family, work)",
+      "format": "mystery_explained",
+      "hook_style": "you_scenario",
+      "loop_style": "mirror_loop",
+      "title": "Why Your Brain Resets Your Memory 🤔",
+      "subject": "event boundary",
+      "subject_key": "boundary event",
+      "fact": "Walking through a doorway creates an 'event boundary' in your brain, causing it to clear your short-term memory to prepare for a new environment.",
+      "fingerprint": "distraction environment information actively boundary suddenly doorway prepare thought through forget memory simple vanish brain clear creat event reset short"
+    },
+    {
+      "date": "2026-10-18T23:38:00",
+      "category": "emotions, mood, stress and how people react to them",
+      "format": "myth_vs_truth",
+      "hook_style": "impossible_claim",
+      "loop_style": "lead_in_loop",
+      "title": "Your Body REMEMBERS Every Emotion You IGNORE! 🤯",
+      "subject": "emotional suppression",
+      "subject_key": "emotional suppression",
+      "fact": "Suppressed emotions don't simply disappear; they can manifest as physical symptoms or intensified psychological distress, often surprising the individual.",
+      "fingerprint": "psychological suppression individual disappear emotional intensifi mysteriou precisely manifest physical remember suppress unresolv distres emotion feeling surpris symptom ignore nobody"
+    },
+    {
+      "date": "2026-10-18T23:40:49",
+      "category": "social psychology: crowds, conformity, persuasion, why we copy others",
+      "format": "top3",
+      "hook_style": "number_shock",
+      "loop_style": "mirror_loop",
+      "title": "How Crowds Change Your Behavior! Psychology Fact 🤯",
+      "subject": "deindividuation",
+      "subject_key": "deindividuation",
+      "fact": "When people feel anonymous in a crowd, they are more likely to abandon personal restraints and adopt the group's behavior, often acting in ways they wouldn't alone, a phenomenon known as deindividuation.",
+      "fingerprint": "deindividuation phenomenon psychology anonymity disappear restraint anonymou behavior identity personal powerful abandon against action change effect likely people wouldn adopt"
     }
   ]
 }
