@@ -975,6 +975,42 @@
       "subject_key": "deindividuation",
       "fact": "When people feel anonymous in a crowd, they are more likely to abandon personal restraints and adopt the group's behavior, often acting in ways they wouldn't alone, a phenomenon known as deindividuation.",
       "fingerprint": "deindividuation phenomenon psychology anonymity disappear restraint anonymou behavior identity personal powerful abandon against action change effect likely people wouldn adopt"
+    },
+    {
+      "date": "2026-10-19T15:53:44",
+      "category": "childhood, learning and curiosity: how people learn and why praise/habits stick",
+      "format": "shocking_fact",
+      "hook_style": "direct_question",
+      "loop_style": "lead_in_loop",
+      "title": "Why Some Habits Are IMPOSSIBLE To Break! 🤔",
+      "subject": "habit formation",
+      "subject_key": "formation habit",
+      "fact": "Intermittent, unpredictable rewards create the most persistent and addictive habits in the human brain.",
+      "fingerprint": "psychological unpredictable intermittent unstoppable impossible incredibly persistent addictive formation willpower behavior surprise exactly sometim become create design reward sticky strong"
+    },
+    {
+      "date": "2026-10-19T15:56:56",
+      "category": "sleep, dreams and tiredness: what they do to mood and behaviour",
+      "format": "myth_vs_truth",
+      "hook_style": "why_want",
+      "loop_style": "mirror_loop",
+      "title": "Your Brain Lies About Tiredness 🤯",
+      "subject": "sleep perception",
+      "subject_key": "perception sleep",
+      "fact": "Sleep deprivation severely impairs cognitive functions, including judgment and impulse control. Individuals often misjudge their own level of impairment, leading to overconfidence and risky decisions, even if they feel temporarily alert. This discrepancy between perceived and actual ability is a common effect of sleep loss.",
+      "fingerprint": "overconfidence surprisingly deprivation discrepancy temporarily impairment individual perception cognitive decision function judgment misjudge severely tirednes ability between control impulse misjudg"
+    },
+    {
+      "date": "2026-10-19T15:59:20",
+      "category": "friendship, relationships, texting, jealousy and loneliness (well-established findings only)",
+      "format": "personal_what_if",
+      "hook_style": "you_scenario",
+      "loop_style": "lead_in_loop",
+      "title": "Why Your Brain Invented Text Moods 🤯",
+      "subject": "texting psychology",
+      "subject_key": "psychology text",
+      "fact": "When reading ambiguous text messages, your brain fills in emotional gaps, often projecting your current mood or insecurities onto the message, making neutral texts feel critical or harsh.",
+      "fingerprint": "especially expression insecurity psychology emotional ambiguou critical suddenly current imagine message neutral project invent lonely messag unsure brain harsh often"
     }
   ]
 }
