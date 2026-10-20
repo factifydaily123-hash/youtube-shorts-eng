@@ -1011,6 +1011,18 @@
       "subject_key": "psychology text",
       "fact": "When reading ambiguous text messages, your brain fills in emotional gaps, often projecting your current mood or insecurities onto the message, making neutral texts feel critical or harsh.",
       "fingerprint": "especially expression insecurity psychology emotional ambiguou critical suddenly current imagine message neutral project invent lonely messag unsure brain harsh often"
+    },
+    {
+      "date": "2026-10-20T18:03:34",
+      "category": "memory: why we forget, false memories, why we remember some things forever",
+      "format": "shocking_fact",
+      "hook_style": "number_shock",
+      "loop_style": "answer_loop",
+      "title": "Why Your Brain Forgets 70% of New Facts! 🧠",
+      "subject": "memory decay",
+      "subject_key": "decay memory",
+      "fact": "The average person forgets a significant portion of newly learned information within 24 hours, but actively recalling and explaining information can significantly improve retention.",
+      "fingerprint": "significantly information significant strengthen disappear retention actively average explain improve pathway percent portion forget memory person recall simple vanish within"
     }
   ]
 }
