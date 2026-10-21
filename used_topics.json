@@ -1023,6 +1023,18 @@
       "subject_key": "decay memory",
       "fact": "The average person forgets a significant portion of newly learned information within 24 hours, but actively recalling and explaining information can significantly improve retention.",
       "fingerprint": "significantly information significant strengthen disappear retention actively average explain improve pathway percent portion forget memory person recall simple vanish within"
+    },
+    {
+      "date": "2026-10-21T16:41:49",
+      "category": "shopping, money and attention psychology: why we buy, scroll and get hooked",
+      "format": "top3",
+      "hook_style": "contradiction",
+      "loop_style": "mirror_loop",
+      "title": "Why FREE Things Make You SPEND More 🤯",
+      "subject": "zero price effect",
+      "subject_key": "effect price zero",
+      "fact": "The 'zero-price effect' makes us irrationally overvalue free items, even if it means choosing a worse deal or spending more overall.",
+      "fingerprint": "irrationally overvalue overvalu overall better choose effect freeby option anyth brain choos often price spend thing weird worse deal free"
     }
   ]
 }
