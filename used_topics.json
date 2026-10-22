@@ -1035,6 +1035,18 @@
       "subject_key": "effect price zero",
       "fact": "The 'zero-price effect' makes us irrationally overvalue free items, even if it means choosing a worse deal or spending more overall.",
       "fingerprint": "irrationally overvalue overvalu overall better choose effect freeby option anyth brain choos often price spend thing weird worse deal free"
+    },
+    {
+      "date": "2026-10-22T19:55:13",
+      "category": "decision making, cognitive biases and why smart people make silly choices",
+      "format": "myth_vs_truth",
+      "hook_style": "why_want",
+      "loop_style": "answer_loop",
+      "title": "Why Shops WANT You Touching Items! 🤯",
+      "subject": "endowment effect",
+      "subject_key": "effect endowment",
+      "fact": "Touching an item makes people feel a sense of ownership, increasing its perceived value and desire to purchase it, a phenomenon known as the Endowment Effect.",
+      "fingerprint": "subconsciou phenomenon endowment ownership purchase increas perceiv quality desire effect people brain check creat desir known sense thing think touch"
     }
   ]
 }
