@@ -1047,6 +1047,30 @@
       "subject_key": "effect endowment",
       "fact": "Touching an item makes people feel a sense of ownership, increasing its perceived value and desire to purchase it, a phenomenon known as the Endowment Effect.",
       "fingerprint": "subconsciou phenomenon endowment ownership purchase increas perceiv quality desire effect people brain check creat desir known sense thing think touch"
+    },
+    {
+      "date": "2026-10-24T01:35:52",
+      "category": "everyday human behaviour: why people do small things in daily life (phone, friends, family, work)",
+      "format": "mystery_explained",
+      "hook_style": "direct_question",
+      "loop_style": "mirror_loop",
+      "title": "Why You Cringe At Others' Embarrassment 🤯",
+      "subject": "vicarious embarrassment",
+      "subject_key": "embarrassment vicariou",
+      "fact": "People experience vicarious embarrassment because their brain's empathy circuits simulate the social distress of others, mirroring their awkwardness.",
+      "fingerprint": "embarrassment awkwardnes experience experienc embarras simulate themselv vicariou circuit distres empathy stomach cringe involv mirror people reason social brain other"
+    },
+    {
+      "date": "2026-10-24T01:38:59",
+      "category": "psychology of first impressions, attraction and body language (only well-established findings)",
+      "format": "personal_what_if",
+      "hook_style": "you_scenario",
+      "loop_style": "lead_in_loop",
+      "title": "Your Feet Betray Your TRUE Feelings! 🤫",
+      "subject": "nonverbal cues",
+      "subject_key": "cue nonverbal",
+      "fact": "People unconsciously point their feet towards the person they are most interested in or attracted to during a conversation.",
+      "fingerprint": "unconsciously communicator conversation subconsciou unconsciou nonverbal actually interest attract feeling ingrain betray deeply honest orient people person reveal signal subtle"
     }
   ]
 }
