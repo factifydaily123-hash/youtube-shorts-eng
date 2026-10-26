@@ -1107,6 +1107,30 @@
       "subject_key": "praise psychology",
       "fact": "Constantly praising a child's inherent intelligence can lead them to avoid challenging tasks out of fear of failure, thus hindering their learning and growth.",
       "fingerprint": "intelligence constantly psychology actually challeng identity inherent positive backfir failure percent protect growth harder hinder praise alway avoid brain child"
+    },
+    {
+      "date": "2026-10-26T22:11:47",
+      "category": "social psychology: crowds, conformity, persuasion, why we copy others",
+      "format": "shocking_fact",
+      "hook_style": "you_scenario",
+      "loop_style": "lead_in_loop",
+      "title": "Why You Can't Say NO to Favors! 🤔",
+      "subject": "persuasion technique",
+      "subject_key": "persuasion technique",
+      "fact": "The 'Foot-in-the-door' technique states that people are more likely to agree to a large request if they have first agreed to a smaller, related request, driven by a desire for consistency in their self-perception.",
+      "fingerprint": "automatically consistency consistent perception persuasion technique pressure request smaller bigger desire driven likely people someth agree favor first large relat"
+    },
+    {
+      "date": "2026-10-26T22:15:03",
+      "category": "friendship, relationships, texting, jealousy and loneliness (well-established findings only)",
+      "format": "myth_vs_truth",
+      "hook_style": "warning",
+      "loop_style": "answer_loop",
+      "title": "Emotional Support 101: Never Give Quick Advice! 💔",
+      "subject": "emotional support",
+      "subject_key": "emotional support",
+      "fact": "When someone shares a problem, they often seek emotional validation and understanding, not immediate solutions or advice.",
+      "fingerprint": "understand validation emotional immediate solution dismiss problem someone support unheard advice nobody brain never often quick solve think truly wrong"
     }
   ]
 }
