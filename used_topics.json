@@ -1083,6 +1083,30 @@
       "subject_key": "depletion willpower",
       "fact": "Willpower is a limited mental resource that depletes with use, making self-control harder throughout the day.",
       "fingerprint": "throughout depletion emotional impulsive willpower capacity decision limitles resource control deplet dwindl harder mental single slowly choic drain ignor limit"
+    },
+    {
+      "date": "2026-10-26T02:06:49",
+      "category": "focus and attention: why the mind wanders, multitasking, distraction",
+      "format": "mystery_explained",
+      "hook_style": "payoff_promise",
+      "loop_style": "answer_loop",
+      "title": "Your Focus Is a TRAP! 🤯",
+      "subject": "focus effort",
+      "subject_key": "effort focu",
+      "fact": "Exerting too much effort to maintain focus actually depletes your cognitive resources faster, making your mind more prone to wandering.",
+      "fingerprint": "concentrate attention cognitive actually constant maintain yourself quickly resourc betray deplet effort energy faster harder mental wander brain exert limit"
+    },
+    {
+      "date": "2026-10-26T02:10:12",
+      "category": "childhood, learning and curiosity: how people learn and why praise/habits stick",
+      "format": "personal_what_if",
+      "hook_style": "number_shock",
+      "loop_style": "mirror_loop",
+      "title": "Why 'Smart' Praise Backfires 🤯",
+      "subject": "praise psychology",
+      "subject_key": "praise psychology",
+      "fact": "Constantly praising a child's inherent intelligence can lead them to avoid challenging tasks out of fear of failure, thus hindering their learning and growth.",
+      "fingerprint": "intelligence constantly psychology actually challeng identity inherent positive backfir failure percent protect growth harder hinder praise alway avoid brain child"
     }
   ]
 }
