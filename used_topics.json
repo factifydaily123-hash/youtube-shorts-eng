@@ -1131,6 +1131,18 @@
       "subject_key": "emotional support",
       "fact": "When someone shares a problem, they often seek emotional validation and understanding, not immediate solutions or advice.",
       "fingerprint": "understand validation emotional immediate solution dismiss problem someone support unheard advice nobody brain never often quick solve think truly wrong"
+    },
+    {
+      "date": "2026-10-28T01:34:57",
+      "category": "sleep, dreams and tiredness: what they do to mood and behaviour",
+      "format": "personal_what_if",
+      "hook_style": "stop_doing",
+      "loop_style": "lead_in_loop",
+      "title": "Why Hitting Snooze Makes You More Tired 😴",
+      "subject": "sleep inertia",
+      "subject_key": "inertia sleep",
+      "fact": "Repeatedly hitting the snooze button disrupts your natural sleep cycles, leading to increased grogginess and making you feel more tired than if you woke up at the first alarm.",
+      "fingerprint": "repeatedly groggines actually disrupt exactly exhaust increas inertia natural restart button finish nobody snooze alarm brain cycle extra first foggy"
     }
   ]
 }
