@@ -1143,6 +1143,18 @@
       "subject_key": "inertia sleep",
       "fact": "Repeatedly hitting the snooze button disrupts your natural sleep cycles, leading to increased grogginess and making you feel more tired than if you woke up at the first alarm.",
       "fingerprint": "repeatedly groggines actually disrupt exactly exhaust increas inertia natural restart button finish nobody snooze alarm brain cycle extra first foggy"
+    },
+    {
+      "date": "2026-10-28T18:37:05",
+      "category": "shopping, money and attention psychology: why we buy, scroll and get hooked",
+      "format": "shocking_fact",
+      "hook_style": "number_shock",
+      "loop_style": "answer_loop",
+      "title": "Why scarcity makes you buy! 🛍️",
+      "subject": "scarcity effect",
+      "subject_key": "effect scarcity",
+      "fact": "The scarcity effect describes how people perceive items as more valuable and desirable when their availability is limited, driving increased demand and willingness to purchase.",
+      "fingerprint": "availability powerfully willingnes desirable perceive purchase scarcity valuable describ increas compel demand effect impact people scarce brain limit thing value"
     }
   ]
 }
