@@ -1155,6 +1155,42 @@
       "subject_key": "effect scarcity",
       "fact": "The scarcity effect describes how people perceive items as more valuable and desirable when their availability is limited, driving increased demand and willingness to purchase.",
       "fingerprint": "availability powerfully willingnes desirable perceive purchase scarcity valuable describ increas compel demand effect impact people scarce brain limit thing value"
+    },
+    {
+      "date": "2026-10-29T15:34:06",
+      "category": "emotions, mood, stress and how people react to them",
+      "format": "top3",
+      "hook_style": "payoff_promise",
+      "loop_style": "mirror_loop",
+      "title": "Your Mood Literally Changes Your Reality! 🤯",
+      "subject": "mood perception",
+      "subject_key": "mood perception",
+      "fact": "Our current emotional state significantly influences how we interpret events and memories, often aligning perception with our mood.",
+      "fingerprint": "psychological significantly perception emotional interpret literally prioritiz actively influenc negative positive confirm current everyth feeling neutral reality detail easily memory"
+    },
+    {
+      "date": "2026-10-29T15:35:00",
+      "category": "memory: why we forget, false memories, why we remember some things forever",
+      "format": "personal_what_if",
+      "hook_style": "you_scenario",
+      "loop_style": "answer_loop",
+      "title": "Why You Suddenly Forget Old Facts?!",
+      "subject": "memory interference",
+      "subject_key": "interference memory",
+      "fact": "Learning new, similar information can make it harder to recall older, related memories, a phenomenon known as retroactive interference.",
+      "fingerprint": "interference information retroactive phenomenon interfer suddenly weirdest similar access become forget harder memory recall acces block brain delet known learn"
+    },
+    {
+      "date": "2026-10-29T15:37:00",
+      "category": "everyday human behaviour: why people do small things in daily life (phone, friends, family, work)",
+      "format": "myth_vs_truth",
+      "hook_style": "stop_doing",
+      "loop_style": "mirror_loop",
+      "title": "Stop Picking The Same Seat! 🤯",
+      "subject": "habitual choice",
+      "subject_key": "choice habitual",
+      "fact": "People often choose the same seat or spot to conserve mental energy and reduce cognitive load by avoiding minor decisions.",
+      "fingerprint": "cognitive conserve decision habitual comfort conserv preciou agenda choice choose energy hidden mental people reduce sneaky subtly alway avoid brain"
     }
   ]
 }
