@@ -1191,6 +1191,30 @@
       "subject_key": "choice habitual",
       "fact": "People often choose the same seat or spot to conserve mental energy and reduce cognitive load by avoiding minor decisions.",
       "fingerprint": "cognitive conserve decision habitual comfort conserv preciou agenda choice choose energy hidden mental people reduce sneaky subtly alway avoid brain"
+    },
+    {
+      "date": "2026-10-30T23:47:07",
+      "category": "psychology of habits, procrastination, motivation and willpower",
+      "format": "shocking_fact",
+      "hook_style": "impossible_claim",
+      "loop_style": "lead_in_loop",
+      "title": "Achieve ANY Goal Without Willpower! ✨",
+      "subject": "goal achievement",
+      "subject_key": "achievement goal",
+      "fact": "Implementing specific 'if-then' plans, known as implementation intentions, can dramatically increase your chances of achieving goals without relying solely on conscious willpower, by automatically linking a trigger to an action.",
+      "fingerprint": "implementation automatically dramatically achievement resistance implement intention willpower automate consciou constant increase specific strategy yourself achieve exactly imagine through trigger"
+    },
+    {
+      "date": "2026-10-30T23:49:44",
+      "category": "focus and attention: why the mind wanders, multitasking, distraction",
+      "format": "personal_what_if",
+      "hook_style": "warning",
+      "loop_style": "answer_loop",
+      "title": "Your Brain's Secret Blind Spot 🧠",
+      "subject": "selective attention",
+      "subject_key": "attention selective",
+      "fact": "When you intensely focus on one thing, your brain filters out other obvious things, making you effectively blind to them.",
+      "fingerprint": "effectively floodlight attention highlight intensely invisible literally selective spotlight everyth around darken filter happen obviou secret blind brain other thing"
     }
   ]
 }
