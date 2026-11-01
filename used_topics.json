@@ -1227,6 +1227,42 @@
       "subject_key": "attraction psychology",
       "fact": "People can misattribute physiological arousal from one source (like fear or excitement) to another (like attraction to a person), making them perceive the other person as more attractive.",
       "fingerprint": "physiological misattribute misattribut attraction attractive excitement psychology actually perceive secretly another arousal special behind people person secret sneaky source thrill"
+    },
+    {
+      "date": "2026-11-01T20:49:13",
+      "category": "decision making, cognitive biases and why smart people make silly choices",
+      "format": "shocking_fact",
+      "hook_style": "direct_question",
+      "loop_style": "answer_loop",
+      "title": "Why Smart People Make Dumb Choices 🧠",
+      "subject": "cognitive bias",
+      "subject_key": "bia cognitive",
+      "fact": "The Dunning-Kruger effect describes how people with low ability in a particular area tend to overestimate their competence, while highly competent individuals often underestimate theirs, falsely assuming others find tasks as easy as they do.",
+      "fingerprint": "underestimate overestimate competence individual particular cognitive competent expertise everyone ability describ falsely insight strange unskill assume effect highly kruger mistak"
+    },
+    {
+      "date": "2026-11-01T20:50:53",
+      "category": "sleep, dreams and tiredness: what they do to mood and behaviour",
+      "format": "personal_what_if",
+      "hook_style": "contradiction",
+      "loop_style": "mirror_loop",
+      "title": "Why Tiredness Makes You OVERREACT! 😬",
+      "subject": "tiredness emotions",
+      "subject_key": "emotion tirednes",
+      "fact": "Tiredness impairs your brain's emotional regulation, amplifying negative reactions and making minor annoyances feel like major threats.",
+      "fingerprint": "regulation emotional overreact sensitive annoyanc negative reaction tirednes amplify emotion intense struggl trigger become center depriv impair overly threat brain"
+    },
+    {
+      "date": "2026-11-01T20:53:40",
+      "category": "friendship, relationships, texting, jealousy and loneliness (well-established findings only)",
+      "format": "myth_vs_truth",
+      "hook_style": "impossible_claim",
+      "loop_style": "answer_loop",
+      "title": "Lonely? Your body is getting sick! 🤒",
+      "subject": "social isolation stress",
+      "subject_key": "isolation social stres",
+      "fact": "Social isolation triggers a physical stress response in the body, leading to increased inflammation and vulnerability to illness, independent of conscious feelings of sadness.",
+      "fingerprint": "vulnerability inflammation independent physically isolation lonelines consciou physical response chronic feeling harmful increas trigger illnes lonely primal sadnes sicker social"
     }
   ]
 }
