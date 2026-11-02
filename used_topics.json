@@ -1263,6 +1263,42 @@
       "subject_key": "isolation social stres",
       "fact": "Social isolation triggers a physical stress response in the body, leading to increased inflammation and vulnerability to illness, independent of conscious feelings of sadness.",
       "fingerprint": "vulnerability inflammation independent physically isolation lonelines consciou physical response chronic feeling harmful increas trigger illnes lonely primal sadnes sicker social"
+    },
+    {
+      "date": "2026-11-02T16:07:24",
+      "category": "emotions, mood, stress and how people react to them",
+      "format": "top3",
+      "hook_style": "you_scenario",
+      "loop_style": "lead_in_loop",
+      "title": "Your Brain's Stress Trap 🧠",
+      "subject": "anticipatory stress",
+      "subject_key": "anticipatory stres",
+      "fact": "Anticipating a negative event often causes more stress and anxiety than the event itself, leading to disproportionate emotional responses.",
+      "fingerprint": "disproportionate anticipation anticipatory anticipat emotional negative possible anxiety exactly imagine intense outcome reality respons actual future itself brain dread event"
+    },
+    {
+      "date": "2026-11-02T16:09:50",
+      "category": "memory: why we forget, false memories, why we remember some things forever",
+      "format": "personal_what_if",
+      "hook_style": "number_shock",
+      "loop_style": "mirror_loop",
+      "title": "Why Most Eyewitness Accounts Are WRONG! 🧠",
+      "subject": "memory errors",
+      "subject_key": "error memory",
+      "fact": "The misinformation effect demonstrates that post-event information can easily alter or create false details in a person's memory of an event without their conscious awareness.",
+      "fingerprint": "misinformation recollection information demonstrat eyewitness eyewitnes awarenes consciou remember account clearly percent without create detail easily effect memory person subtly"
+    },
+    {
+      "date": "2026-11-02T16:10:35",
+      "category": "childhood, learning and curiosity: how people learn and why praise/habits stick",
+      "format": "myth_vs_truth",
+      "hook_style": "payoff_promise",
+      "loop_style": "lead_in_loop",
+      "title": "Your Brain Learns Best from MISTAKES! 🤯",
+      "subject": "learning through error",
+      "subject_key": "error learn through",
+      "fact": "Engaging in active retrieval and making errors during learning, especially when followed by feedback, strengthens memory and understanding more than passive study.",
+      "fingerprint": "connection especially strengthen understand retrieval actually feedback correct exactly passive through active deeply follow memory mistak people avoid brain engag"
     }
   ]
 }
