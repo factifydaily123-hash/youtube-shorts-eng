@@ -1299,6 +1299,18 @@
       "subject_key": "error learn through",
       "fact": "Engaging in active retrieval and making errors during learning, especially when followed by feedback, strengthens memory and understanding more than passive study.",
       "fingerprint": "connection especially strengthen understand retrieval actually feedback correct exactly passive through active deeply follow memory mistak people avoid brain engag"
+    },
+    {
+      "date": "2026-11-03T19:28:32",
+      "category": "shopping, money and attention psychology: why we buy, scroll and get hooked",
+      "format": "shocking_fact",
+      "hook_style": "why_want",
+      "loop_style": "answer_loop",
+      "title": "Why do shops show you bad deals? 🤔",
+      "subject": "decoy effect",
+      "subject_key": "decoy effect",
+      "fact": "The decoy effect explains how introducing a clearly inferior third option makes one of the other existing options appear more attractive and desirable.",
+      "fingerprint": "irresistible attractive profitable desirable highlight inferior introduc overpric terrible another clearly company exactly explain product appear choice effect intend notice"
     }
   ]
 }
