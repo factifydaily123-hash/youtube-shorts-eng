@@ -1311,6 +1311,30 @@
       "subject_key": "decoy effect",
       "fact": "The decoy effect explains how introducing a clearly inferior third option makes one of the other existing options appear more attractive and desirable.",
       "fingerprint": "irresistible attractive profitable desirable highlight inferior introduc overpric terrible another clearly company exactly explain product appear choice effect intend notice"
+    },
+    {
+      "date": "2026-11-04T21:53:59",
+      "category": "focus and attention: why the mind wanders, multitasking, distraction",
+      "format": "top3",
+      "hook_style": "impossible_claim",
+      "loop_style": "mirror_loop",
+      "title": "Your Brain CAN'T Multitask?! 🤯",
+      "subject": "multitasking illusion",
+      "subject_key": "illusion multitask",
+      "fact": "The human brain is fundamentally a single-task processor, and what appears as multitasking is rapid task switching, which can lead the brain to generate internal distractions if a task is not sufficiently engaging.",
+      "fingerprint": "fundamentally sufficiently distraction engagement multitask processor actually generate illusion internal generat appear cannot single switch brain creat engag human rapid"
+    },
+    {
+      "date": "2026-11-04T21:56:21",
+      "category": "psychology of first impressions, attraction and body language (only well-established findings)",
+      "format": "mystery_explained",
+      "hook_style": "you_scenario",
+      "loop_style": "lead_in_loop",
+      "title": "Why Your Body Secretly Copies Others 👤",
+      "subject": "unconscious mimicry",
+      "subject_key": "mimicry unconsciou",
+      "fact": "People unconsciously mimic the body language of those they interact with, fostering rapport and increasing social connection.",
+      "fingerprint": "automatically unconsciously connection expression unconsciou interact language secretly connect increas mimicry pattern rapport without foster gestur happen mirror notice people"
     }
   ]
 }
