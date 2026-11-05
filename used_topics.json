@@ -1335,6 +1335,42 @@
       "subject_key": "mimicry unconsciou",
       "fact": "People unconsciously mimic the body language of those they interact with, fostering rapport and increasing social connection.",
       "fingerprint": "automatically unconsciously connection expression unconsciou interact language secretly connect increas mimicry pattern rapport without foster gestur happen mirror notice people"
+    },
+    {
+      "date": "2026-11-05T21:31:55",
+      "category": "psychology of habits, procrastination, motivation and willpower",
+      "format": "myth_vs_truth",
+      "hook_style": "contradiction",
+      "loop_style": "mirror_loop",
+      "title": "Don't Wait For Motivation! Start Anything Now! 🔥",
+      "subject": "motivation paradox",
+      "subject_key": "motivation paradox",
+      "fact": "Action creates motivation, meaning you don't need to feel motivated to start a task; starting, even imperfectly, builds the momentum you need.",
+      "fingerprint": "imperfectly motivation momentum motivat paradox perfect action energy rarely anyth arriv brain build burst creat start weird feel here mean"
+    },
+    {
+      "date": "2026-11-05T21:35:12",
+      "category": "decision making, cognitive biases and why smart people make silly choices",
+      "format": "shocking_fact",
+      "hook_style": "stop_doing",
+      "loop_style": "answer_loop",
+      "title": "Stop Looking At The First Price! 💸",
+      "subject": "anchoring bias",
+      "subject_key": "anchor bia",
+      "fact": "The first piece of information encountered, even if irrelevant, strongly influences subsequent judgments and decisions, a phenomenon known as anchoring bias.",
+      "fingerprint": "information irrelevant phenomenon subsequent encounter decision influenc judgment strongly heavily initial overpay anchor choose number people poorly brain choic first"
+    },
+    {
+      "date": "2026-11-05T21:38:07",
+      "category": "friendship, relationships, texting, jealousy and loneliness (well-established findings only)",
+      "format": "mystery_explained",
+      "hook_style": "warning",
+      "loop_style": "mirror_loop",
+      "title": "Never Hide Your True Self! 🤫",
+      "subject": "vulnerability connection",
+      "subject_key": "connection vulnerability",
+      "fact": "People often avoid vulnerability thinking it makes them appear weak, but revealing imperfections actually builds stronger trust and deeper connections with others.",
+      "fingerprint": "vulnerability imperfection connection actually distance stronger attract courage perfect weaknes appear deeper nobody people reveal avoid being build creat never"
     }
   ]
 }
